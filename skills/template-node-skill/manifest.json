@@ -1,0 +1,9 @@
+{
+  "name": "template-node-skill",
+  "description": "Template Node.js skill: accepts JSON input and echoes it back.",
+  "inputs": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": true
+  }
+}

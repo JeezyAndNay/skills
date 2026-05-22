@@ -1,0 +1,12 @@
+{
+  "name": "template-node-skill",
+  "version": "0.0.1",
+  "private": true,
+  "main": "handler.js",
+  "scripts": {
+    "start": "node handler.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
