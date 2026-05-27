@@ -1,0 +1,269 @@
+{
+  "name": "Ruins Untold — Idea Catalog",
+  "nodes": [
+    {
+      "id": "a1f3e2b0-0001-4c9a-8d7e-111111111111",
+      "name": "Run Idea Generation",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [180, 340],
+      "parameters": {}
+    },
+    {
+      "id": "a1f3e2b0-0002-4c9a-8d7e-222222222222",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [380, 340],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-001",
+              "name": "spreadsheetId",
+              "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+              "type": "string"
+            },
+            {
+              "id": "cfg-002",
+              "name": "sheetName",
+              "value": "Ideas",
+              "type": "string"
+            },
+            {
+              "id": "cfg-003",
+              "name": "ideasCount",
+              "value": 10,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f3e2b0-0003-4c9a-8d7e-333333333333",
+      "name": "Generate Ideas via Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [600, 340],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  model: 'claude-opus-4-5',\n  max_tokens: 8000,\n  system: `You are the lead researcher and content strategist for Ruins Untold, a long-form YouTube channel covering ancient mysteries, forbidden archaeology, and alternative history.\\n\\nGenerate exactly ${$json.ideasCount} video ideas as a pure JSON array with no markdown fences, no preamble, and no explanation — only the JSON array.\\n\\nEach idea must use this exact schema:\\n{\\n  \"topic\": \"Short punchy title (5-10 words)\",\\n  \"angle\": \"3-5 sentences. Opens with the mainstream consensus as settled fact. Cracks it with the physical or documentary anomaly. Names the gatekeeper institution or researcher blocking the evidence. Ends on the unanswered question.\",\\n  \"key_evidence\": \"Minimum 4 items — paper title + date, artifact + location, document + year, institution + action. Always specific. Never vague.\",\\n  \"key_researchers\": \"Named individuals with roles. Always includes at least one antagonist labeled as such.\",\\n  \"related_video\": \"Prior Ruins Untold episode this connects to, or 'none yet'\",\\n  \"hook_style\": \"question | statement | contradiction | anomaly | revelation\",\\n  \"tone_dial\": 7\\n}\\n\\nRules:\\n- Every idea must have a concrete physical anomaly that cannot be explained by mainstream consensus\\n- Every idea must name a specific gatekeeper institution or antagonist researcher\\n- Tone dial default 6-7. Do not exceed 8 unless the evidence is exceptional\\n- Topics must span different eras, regions, and artifact types — do not cluster\\n- Output ONLY the JSON array. No other text.`,\n  messages: [{ role: 'user', content: 'Generate ' + $json.ideasCount + ' video ideas for the Ruins Untold channel.' }]\n}) }}"
+      }
+    },
+    {
+      "id": "a1f3e2b0-0004-4c9a-8d7e-444444444444",
+      "name": "Parse Ideas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [820, 340],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Extract text from Claude response\nconst responseText = items[0].json.content[0].text.trim();\n\n// Parse the JSON array — handle edge case where model wraps in backticks\nlet ideas;\ntry {\n  // Try direct parse first\n  ideas = JSON.parse(responseText);\n} catch (e) {\n  // Strip markdown code fences if present\n  const stripped = responseText.replace(/^```json?\\n?|```$/gm, '').trim();\n  try {\n    ideas = JSON.parse(stripped);\n  } catch (e2) {\n    // Last resort: extract JSON array with regex\n    const match = stripped.match(/(\\[\\s*\\{[\\s\\S]*\\}\\s*\\])/);\n    if (!match) throw new Error('Could not parse ideas from Claude response. Raw: ' + responseText.slice(0, 300));\n    ideas = JSON.parse(match[1]);\n  }\n}\n\nif (!Array.isArray(ideas)) throw new Error('Expected JSON array, got: ' + typeof ideas);\n\n// Return each idea as a separate item, normalizing field names\nreturn ideas.map(idea => ({\n  json: {\n    topic:            (idea.topic            || '').trim(),\n    angle:            (idea.angle            || '').trim(),\n    key_evidence:     (idea.key_evidence     || '').trim(),\n    key_researchers:  (idea.key_researchers  || '').trim(),\n    hook_style:       (idea.hook_style       || '').trim(),\n    tone_dial:        String(idea.tone_dial  || 7),\n    related_video:    (idea.related_video    || 'none yet').trim()\n  }\n}));"
+      }
+    },
+    {
+      "id": "a1f3e2b0-0005-4c9a-8d7e-555555555555",
+      "name": "Read Existing Topics",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1040, 340],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.sheetName }}",
+          "mode": "name"
+        },
+        "filtersUI": {},
+        "options": {
+          "returnAllMatches": true
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "a1f3e2b0-0006-4c9a-8d7e-666666666666",
+      "name": "Filter Duplicates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1260, 340],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Collect all existing topic strings from the sheet\nconst existingRows = $('Read Existing Topics').all();\nconst existingTopics = existingRows\n  .map(row => (row.json.TOPIC || '').toLowerCase().trim())\n  .filter(t => t.length > 0);\n\n// Helper: extract significant words (length > 3, not stop words)\nconst STOP_WORDS = new Set(['that','this','with','from','have','been','were','they','their','what','when','where','which','will','would','could','should','about','than','then','into','over','after','before','under','above','between','through','during','found','built','used','made']);\n\nfunction sigWords(str) {\n  return str.toLowerCase()\n    .replace(/[^a-z0-9\\s]/g, '')\n    .split(/\\s+/)\n    .filter(w => w.length > 3 && !STOP_WORDS.has(w));\n}\n\n// Get newly generated ideas (all items in current run)\nconst newIdeas = items;\nconst uniqueIdeas = [];\n\nfor (const idea of newIdeas) {\n  const topic = (idea.json.topic || '').toLowerCase().trim();\n\n  // 1. Exact match\n  if (existingTopics.includes(topic)) continue;\n\n  // 2. Key-word overlap: flag as duplicate if >=60% of significant words match any existing topic\n  const newWords = sigWords(topic);\n  const isDuplicate = newWords.length > 0 && existingTopics.some(existing => {\n    const existWords = sigWords(existing);\n    if (existWords.length === 0) return false;\n    const overlap = newWords.filter(w => existWords.includes(w)).length;\n    return overlap / newWords.length >= 0.6;\n  });\n\n  if (!isDuplicate) uniqueIdeas.push(idea);\n}\n\nreturn uniqueIdeas.length > 0 ? uniqueIdeas : [{ json: { __noNewIdeas: true } }];"
+      }
+    },
+    {
+      "id": "a1f3e2b0-0007-4c9a-8d7e-777777777777",
+      "name": "Any New Ideas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1480, 340],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-001",
+              "leftValue": "={{ $json.__noNewIdeas }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f3e2b0-0008-4c9a-8d7e-888888888888",
+      "name": "Write to Catalog",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1700, 240],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.sheetName }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "DATE_ADDED":       "={{ $now.format('yyyy-MM-dd') }}",
+            "STATUS":           "New",
+            "TOPIC":            "={{ $json.topic }}",
+            "ANGLE":            "={{ $json.angle }}",
+            "KEY_EVIDENCE":     "={{ $json.key_evidence }}",
+            "KEY_RESEARCHERS":  "={{ $json.key_researchers }}",
+            "HOOK_STYLE":       "={{ $json.hook_style }}",
+            "TONE_DIAL":        "={{ $json.tone_dial }}",
+            "RELATED_VIDEO":    "={{ $json.related_video }}",
+            "NOTES":            ""
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "DATE_ADDED",      "displayName": "DATE_ADDED",      "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "STATUS",          "displayName": "STATUS",          "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "TOPIC",           "displayName": "TOPIC",           "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "ANGLE",           "displayName": "ANGLE",           "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "KEY_EVIDENCE",    "displayName": "KEY_EVIDENCE",    "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "KEY_RESEARCHERS", "displayName": "KEY_RESEARCHERS", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "HOOK_STYLE",      "displayName": "HOOK_STYLE",      "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "TONE_DIAL",       "displayName": "TONE_DIAL",       "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "RELATED_VIDEO",   "displayName": "RELATED_VIDEO",   "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "NOTES",           "displayName": "NOTES",           "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ]
+        },
+        "options": {
+          "cellFormat": "USER_ENTERED"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "a1f3e2b0-0009-4c9a-8d7e-999999999999",
+      "name": "Nothing New to Add",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1700, 460],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Run Idea Generation": {
+      "main": [
+        [{ "node": "Config", "type": "main", "index": 0 }]
+      ]
+    },
+    "Config": {
+      "main": [
+        [{ "node": "Generate Ideas via Claude", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Ideas via Claude": {
+      "main": [
+        [{ "node": "Parse Ideas", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Ideas": {
+      "main": [
+        [{ "node": "Read Existing Topics", "type": "main", "index": 0 }]
+      ]
+    },
+    "Read Existing Topics": {
+      "main": [
+        [{ "node": "Filter Duplicates", "type": "main", "index": 0 }]
+      ]
+    },
+    "Filter Duplicates": {
+      "main": [
+        [{ "node": "Any New Ideas?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Any New Ideas?": {
+      "main": [
+        [{ "node": "Write to Catalog", "type": "main", "index": 0 }],
+        [{ "node": "Nothing New to Add", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "ruins-untold-catalog-v1"
+  }
+}
