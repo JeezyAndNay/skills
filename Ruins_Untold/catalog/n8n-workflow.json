@@ -96,9 +96,7 @@
           "mode": "name"
         },
         "filtersUI": {},
-        "options": {
-          "returnAllMatches": true
-        }
+        "options": {}
       },
       "credentials": {
         "googleSheetsOAuth2Api": {
