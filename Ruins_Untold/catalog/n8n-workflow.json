@@ -108,14 +108,25 @@
       }
     },
     {
+      "id": "a1f3e2b0-0005b-4c9a-8d7e-aaaaaaaaaaaa",
+      "name": "Ensure Flow",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1150, 340],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// If the sheet is empty on first run, Read Existing Topics returns 0 items\n// and n8n would stop the flow. Pass a dummy item so Filter Duplicates runs.\nreturn items.length > 0 ? items : [{ json: { TOPIC: '' } }];"
+      }
+    },
+    {
       "id": "a1f3e2b0-0006-4c9a-8d7e-666666666666",
       "name": "Filter Duplicates",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1260, 340],
+      "position": [1360, 340],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Collect all existing topic strings from the sheet\nconst existingRows = $('Read Existing Topics').all();\nconst existingTopics = existingRows\n  .map(row => (row.json.TOPIC || '').toLowerCase().trim())\n  .filter(t => t.length > 0);\n\n// Helper: extract significant words (length > 3, not stop words)\nconst STOP_WORDS = new Set(['that','this','with','from','have','been','were','they','their','what','when','where','which','will','would','could','should','about','than','then','into','over','after','before','under','above','between','through','during','found','built','used','made']);\n\nfunction sigWords(str) {\n  return str.toLowerCase()\n    .replace(/[^a-z0-9\\s]/g, '')\n    .split(/\\s+/)\n    .filter(w => w.length > 3 && !STOP_WORDS.has(w));\n}\n\n// Get newly generated ideas (all items in current run)\nconst newIdeas = items;\nconst uniqueIdeas = [];\n\nfor (const idea of newIdeas) {\n  const topic = (idea.json.topic || '').toLowerCase().trim();\n\n  // 1. Exact match\n  if (existingTopics.includes(topic)) continue;\n\n  // 2. Key-word overlap: flag as duplicate if >=60% of significant words match any existing topic\n  const newWords = sigWords(topic);\n  const isDuplicate = newWords.length > 0 && existingTopics.some(existing => {\n    const existWords = sigWords(existing);\n    if (existWords.length === 0) return false;\n    const overlap = newWords.filter(w => existWords.includes(w)).length;\n    return overlap / newWords.length >= 0.6;\n  });\n\n  if (!isDuplicate) uniqueIdeas.push(idea);\n}\n\nreturn uniqueIdeas.length > 0 ? uniqueIdeas : [{ json: { __noNewIdeas: true } }];"
+        "jsCode": "// Collect all existing topic strings from the sheet\n// (items here are sheet rows passed through from Ensure Flow)\nconst existingRows = items;\nconst existingTopics = existingRows\n  .map(row => (row.json.TOPIC || '').toLowerCase().trim())\n  .filter(t => t.length > 0);\n\n// Helper: extract significant words (length > 3, not stop words)\nconst STOP_WORDS = new Set(['that','this','with','from','have','been','were','they','their','what','when','where','which','will','would','could','should','about','than','then','into','over','after','before','under','above','between','through','during','found','built','used','made']);\n\nfunction sigWords(str) {\n  return str.toLowerCase()\n    .replace(/[^a-z0-9\\s]/g, '')\n    .split(/\\s+/)\n    .filter(w => w.length > 3 && !STOP_WORDS.has(w));\n}\n\n// Pull the newly generated ideas from the Parse Ideas node upstream\n// (not from items, which are the sheet rows)\nconst newIdeas = $('Parse Ideas').all();\nconst uniqueIdeas = [];\n\nfor (const idea of newIdeas) {\n  const topic = (idea.json.topic || '').toLowerCase().trim();\n\n  // 1. Exact match\n  if (existingTopics.includes(topic)) continue;\n\n  // 2. Key-word overlap: flag as duplicate if >=60% of significant words match any existing topic\n  const newWords = sigWords(topic);\n  const isDuplicate = newWords.length > 0 && existingTopics.some(existing => {\n    const existWords = sigWords(existing);\n    if (existWords.length === 0) return false;\n    const overlap = newWords.filter(w => existWords.includes(w)).length;\n    return overlap / newWords.length >= 0.6;\n  });\n\n  if (!isDuplicate) uniqueIdeas.push(idea);\n}\n\nreturn uniqueIdeas.length > 0 ? uniqueIdeas : [{ json: { __noNewIdeas: true } }];"
       }
     },
     {
@@ -235,6 +246,11 @@
       ]
     },
     "Read Existing Topics": {
+      "main": [
+        [{ "node": "Ensure Flow", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ensure Flow": {
       "main": [
         [{ "node": "Filter Duplicates", "type": "main", "index": 0 }]
       ]
