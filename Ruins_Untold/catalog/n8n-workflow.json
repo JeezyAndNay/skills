@@ -177,7 +177,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "ID":               "=ROW()-1",
+            "ID":               "={{ $('Read Existing Topics').all().length + $itemIndex + 1 }}",
             "DATE_ADDED":       "={{ $now.format('yyyy-MM-dd') }}",
             "STATUS":           "New",
             "TOPIC":            "={{ $json.topic }}",
