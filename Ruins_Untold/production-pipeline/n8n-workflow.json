@@ -43,7 +43,7 @@
           "dataLocationOnSheet": {
             "values": {
               "rangeDefinition": "specifyRangeA1",
-              "range": "A1:H11"
+              "range": "A1:K200"
             }
           }
         }
@@ -66,7 +66,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const rows = $input.all();\n\n// Build numbered display list (TOPIC column only)\nconst topicList = rows\n  .map((item, i) => `${i + 1}. ${item.json.TOPIC || '(no topic)'}`)\n  .join('\\n');\n\n// Stash all row data as JSON string for the lookup node\nconst allRows = rows.map(r => r.json);\n\nreturn [{\n  json: {\n    topicList,\n    allRows: JSON.stringify(allRows),\n    count: rows.length\n  }\n}];\n"
+        "jsCode": "const rows = $input.all();\n\n// Keep only rows with STATUS exactly equal to 'New'\nconst newRows = rows.filter(item =>\n  (item.json.STATUS || '').toString().trim().toLowerCase() === 'new'\n);\n\nif (newRows.length === 0) {\n  throw new Error(\n    'No ideas with STATUS = \"New\" found. Open the Ruins_Untold_Ideas sheet '\n    + 'and set at least one row to New before running.'\n  );\n}\n\n// Take the first 10 New rows\nconst displayRows = newRows.slice(0, 10);\n\n// Build numbered display list (TOPIC only)\nconst topicList = displayRows\n  .map((item, i) => `${i + 1}. ${item.json.TOPIC || '(no topic)'}`)\n  .join('\\n');\n\n// Stash the filtered rows for the lookup node\nconst allRows = displayRows.map(r => r.json);\n\nreturn [{\n  json: {\n    topicList,\n    allRows: JSON.stringify(allRows),\n    count: displayRows.length\n  }\n}];\n"
       }
     },
     {
