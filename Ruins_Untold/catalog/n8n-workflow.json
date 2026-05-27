@@ -2,59 +2,57 @@
   "name": "Ruins Untold — Idea Catalog",
   "nodes": [
     {
-      "id": "a1f3e2b0-0001-4c9a-8d7e-111111111111",
+      "parameters": {},
+      "id": "d87e28a7-9a0c-448d-8d84-2355f56efb71",
       "name": "Run Idea Generation",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [180, 340],
-      "parameters": {}
+      "position": [
+        -416,
+        144
+      ]
     },
     {
-      "id": "a1f3e2b0-0002-4c9a-8d7e-222222222222",
-      "name": "Config",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3,
-      "position": [380, 340],
       "parameters": {
-        "mode": "manual",
-        "assignments": {
-          "assignments": [
+        "fields": {
+          "values": [
             {
-              "id": "cfg-001",
               "name": "spreadsheetId",
-              "value": "YOUR_GOOGLE_SHEET_ID_HERE",
-              "type": "string"
+              "stringValue": "1kF8cfyh3qZZIcPcSWYs8olZZYPxFhxBTUhtjK04Eb68"
             },
             {
-              "id": "cfg-002",
               "name": "sheetName",
-              "value": "Ideas",
-              "type": "string"
+              "stringValue": "Ideas"
             },
             {
-              "id": "cfg-003",
               "name": "ideasCount",
-              "value": 5,
-              "type": "number"
+              "type": "numberValue",
+              "numberValue": "5"
             }
           ]
         },
         "options": {}
-      }
+      },
+      "id": "2a35b6d3-4dd5-4696-8df9-d668be2ab6c9",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        144
+      ]
     },
     {
-      "id": "a1f3e2b0-0003-4c9a-8d7e-333333333333",
-      "name": "Generate Ideas via Claude",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [600, 200],
       "parameters": {
         "method": "POST",
         "url": "http://host.docker.internal:3333/generate",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
@@ -64,27 +62,31 @@
         "options": {
           "timeout": 600000
         }
-      }
+      },
+      "id": "b4654799-394d-49b3-89ac-2b86ad9a17f4",
+      "name": "Generate Ideas via Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        0,
+        0
+      ]
     },
     {
-      "id": "a1f3e2b0-0004-4c9a-8d7e-444444444444",
+      "parameters": {
+        "jsCode": "// Extract text from claude-bridge.py response\nconst responseText = items[0].json.output.trim();\n\n// Parse the JSON array — handle edge case where model wraps in backticks\nlet ideas;\ntry {\n  ideas = JSON.parse(responseText);\n} catch (e) {\n  const stripped = responseText.replace(/^```json?\\n?|```$/gm, '').trim();\n  try {\n    ideas = JSON.parse(stripped);\n  } catch (e2) {\n    const match = stripped.match(/(\\[\\s*\\{[\\s\\S]*\\}\\s*\\])/);\n    if (!match) throw new Error('Could not parse ideas. Raw: ' + responseText.slice(0, 300));\n    ideas = JSON.parse(match[1]);\n  }\n}\n\nif (!Array.isArray(ideas)) throw new Error('Expected JSON array, got: ' + typeof ideas);\n\n// Normalize a field value — handles string, array of strings, array of objects, or null\nfunction str(val) {\n  if (val === null || val === undefined) return '';\n  if (Array.isArray(val)) {\n    return val.map(item => {\n      if (item === null || item === undefined) return '';\n      if (typeof item === 'object') {\n        // Flatten object: join all values with \" — \"\n        return Object.values(item).filter(v => v !== null && v !== undefined).join(' — ');\n      }\n      return String(item);\n    }).filter(s => s.length > 0).join('; ');\n  }\n  if (typeof val === 'object') return Object.values(val).filter(v => v !== null && v !== undefined).join(' — ');\n  return String(val).trim();\n}\n\n// Tag each item as a new idea so Filter Duplicates can identify it\nreturn ideas.map(idea => ({\n  json: {\n    __type:          'new_idea',\n    topic:           str(idea.topic),\n    angle:           str(idea.angle),\n    key_evidence:    str(idea.key_evidence),\n    key_researchers: str(idea.key_researchers),\n    hook_style:      str(idea.hook_style),\n    tone_dial:       str(idea.tone_dial || 7),\n    related_video:   str(idea.related_video) || 'none yet'\n  }\n}));"
+      },
+      "id": "1c94296c-df78-48fa-98bf-9dec541263d8",
       "name": "Parse Ideas",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [820, 200],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "// Extract text from claude-bridge.py response\nconst responseText = items[0].json.output.trim();\n\n// Parse the JSON array — handle edge case where model wraps in backticks\nlet ideas;\ntry {\n  ideas = JSON.parse(responseText);\n} catch (e) {\n  const stripped = responseText.replace(/^```json?\\n?|```$/gm, '').trim();\n  try {\n    ideas = JSON.parse(stripped);\n  } catch (e2) {\n    const match = stripped.match(/(\\[\\s*\\{[\\s\\S]*\\}\\s*\\])/);\n    if (!match) throw new Error('Could not parse ideas. Raw: ' + responseText.slice(0, 300));\n    ideas = JSON.parse(match[1]);\n  }\n}\n\nif (!Array.isArray(ideas)) throw new Error('Expected JSON array, got: ' + typeof ideas);\n\n// Normalize a field value — handles string, array of strings, array of objects, or null\nfunction str(val) {\n  if (val === null || val === undefined) return '';\n  if (Array.isArray(val)) {\n    return val.map(item => {\n      if (item === null || item === undefined) return '';\n      if (typeof item === 'object') {\n        // Flatten object: join all values with \" — \"\n        return Object.values(item).filter(v => v !== null && v !== undefined).join(' — ');\n      }\n      return String(item);\n    }).filter(s => s.length > 0).join('; ');\n  }\n  if (typeof val === 'object') return Object.values(val).filter(v => v !== null && v !== undefined).join(' — ');\n  return String(val).trim();\n}\n\n// Tag each item as a new idea so Filter Duplicates can identify it\nreturn ideas.map(idea => ({\n  json: {\n    __type:          'new_idea',\n    topic:           str(idea.topic),\n    angle:           str(idea.angle),\n    key_evidence:    str(idea.key_evidence),\n    key_researchers: str(idea.key_researchers),\n    hook_style:      str(idea.hook_style),\n    tone_dial:       str(idea.tone_dial || 7),\n    related_video:   str(idea.related_video) || 'none yet'\n  }\n}));"
-      }
+      "position": [
+        224,
+        0
+      ]
     },
     {
-      "id": "a1f3e2b0-0005-4c9a-8d7e-555555555555",
-      "name": "Read Existing Topics",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4,
-      "position": [600, 480],
       "parameters": {
-        "operation": "read",
         "documentId": {
           "__rl": true,
           "value": "={{ $('Config').first().json.spreadsheetId }}",
@@ -95,50 +97,55 @@
           "value": "={{ $('Config').first().json.sheetName }}",
           "mode": "name"
         },
-        "filtersUI": {},
         "options": {}
       },
+      "id": "472137c4-7118-4eff-9c82-341b790d6105",
+      "name": "Read Existing Topics",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        0,
+        288
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "id": "5KlwkkXYEjhrIznj",
           "name": "Google Sheets account"
         }
       }
     },
     {
-      "id": "a1f3e2b0-0006-4c9a-8d7e-cccccccccccc",
+      "parameters": {},
+      "id": "bf6a6e44-a0aa-4f82-8099-3f6490abca7c",
       "name": "Merge Ideas and Sheet",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
-      "position": [1040, 340],
-      "parameters": {
-        "mode": "append",
-        "options": {}
-      }
+      "position": [
+        448,
+        144
+      ]
     },
     {
-      "id": "a1f3e2b0-0007-4c9a-8d7e-666666666666",
+      "parameters": {
+        "jsCode": "// Items are a mix of new ideas (tagged __type: 'new_idea') and existing sheet rows\nconst newIdeas     = items.filter(i => i.json.__type === 'new_idea');\nconst existingRows = items.filter(i => i.json.__type !== 'new_idea');\n\n// Build a set of existing topics — normalised to lowercase, collapsed whitespace\nconst existingTopics = new Set(\n  existingRows\n    .map(row => (row.json.TOPIC || '').toLowerCase().replace(/\\s+/g, ' ').trim())\n    .filter(t => t.length > 0)\n);\n\nconst uniqueIdeas = newIdeas.filter(idea => {\n  const topic = (idea.json.topic || '').toLowerCase().replace(/\\s+/g, ' ').trim();\n  return !existingTopics.has(topic);\n});\n\nreturn uniqueIdeas.length > 0 ? uniqueIdeas : [{ json: { __noNewIdeas: true } }];"
+      },
+      "id": "7c357f5c-a0c8-4447-b8f2-c28ee6fef23c",
       "name": "Filter Duplicates",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1260, 340],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "// Items are a mix of new ideas (tagged __type: 'new_idea') and existing sheet rows\nconst newIdeas     = items.filter(i => i.json.__type === 'new_idea');\nconst existingRows = items.filter(i => i.json.__type !== 'new_idea');\n\n// Build a set of existing topics — normalised to lowercase, collapsed whitespace\nconst existingTopics = new Set(\n  existingRows\n    .map(row => (row.json.TOPIC || '').toLowerCase().replace(/\\s+/g, ' ').trim())\n    .filter(t => t.length > 0)\n);\n\nconst uniqueIdeas = newIdeas.filter(idea => {\n  const topic = (idea.json.topic || '').toLowerCase().replace(/\\s+/g, ' ').trim();\n  return !existingTopics.has(topic);\n});\n\nreturn uniqueIdeas.length > 0 ? uniqueIdeas : [{ json: { __noNewIdeas: true } }];"
-      }
+      "position": [
+        672,
+        144
+      ]
     },
     {
-      "id": "a1f3e2b0-0008-4c9a-8d7e-777777777777",
-      "name": "Any New Ideas?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [1480, 340],
       "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": false,
             "leftValue": "",
-            "typeValidation": "loose"
+            "typeValidation": "loose",
+            "version": 1
           },
           "conditions": [
             {
@@ -154,14 +161,17 @@
           "combinator": "and"
         },
         "options": {}
-      }
+      },
+      "id": "d41bfea8-e6fd-4ccc-8c8c-e2bacf46dead",
+      "name": "Any New Ideas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        880,
+        144
+      ]
     },
     {
-      "id": "a1f3e2b0-0009-4c9a-8d7e-888888888888",
-      "name": "Write to Catalog",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4,
-      "position": [1700, 240],
       "parameters": {
         "operation": "append",
         "documentId": {
@@ -177,104 +187,265 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "ID":               "={{ $('Read Existing Topics').all().length + $itemIndex + 1 }}",
-            "DATE_ADDED":       "={{ $now.format('yyyy-MM-dd') }}",
-            "STATUS":           "New",
-            "TOPIC":            "={{ $json.topic }}",
-            "ANGLE":            "={{ $json.angle }}",
-            "KEY_EVIDENCE":     "={{ $json.key_evidence }}",
-            "KEY_RESEARCHERS":  "={{ $json.key_researchers }}",
-            "HOOK_STYLE":       "={{ $json.hook_style }}",
-            "TONE_DIAL":        "={{ $json.tone_dial }}",
-            "RELATED_VIDEO":    "={{ $json.related_video }}",
-            "NOTES":            ""
+            "ID": "={{ $('Read Existing Topics').all().length + $itemIndex + 1 }}",
+            "DATE_ADDED": "={{ $now.format('yyyy-MM-dd') }}",
+            "STATUS": "New",
+            "TOPIC": "={{ $json.topic }}",
+            "ANGLE": "={{ $json.angle }}",
+            "KEY_EVIDENCE": "={{ $json.key_evidence }}",
+            "KEY_RESEARCHERS": "={{ $json.key_researchers }}",
+            "HOOK_STYLE": "={{ $json.hook_style }}",
+            "TONE_DIAL": "={{ $json.tone_dial }}",
+            "RELATED_VIDEO": "={{ $json.related_video }}",
+            "NOTES": ""
           },
           "matchingColumns": [],
           "schema": [
-            { "id": "ID",           "displayName": "ID",           "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "DATE_ADDED",      "displayName": "DATE_ADDED",      "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "STATUS",          "displayName": "STATUS",          "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "TOPIC",           "displayName": "TOPIC",           "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "ANGLE",           "displayName": "ANGLE",           "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "KEY_EVIDENCE",    "displayName": "KEY_EVIDENCE",    "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "KEY_RESEARCHERS", "displayName": "KEY_RESEARCHERS", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "HOOK_STYLE",      "displayName": "HOOK_STYLE",      "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "TONE_DIAL",       "displayName": "TONE_DIAL",       "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "RELATED_VIDEO",   "displayName": "RELATED_VIDEO",   "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "NOTES",           "displayName": "NOTES",           "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "DATE_ADDED",
+              "displayName": "DATE_ADDED",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TOPIC",
+              "displayName": "TOPIC",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ANGLE",
+              "displayName": "ANGLE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "KEY_EVIDENCE",
+              "displayName": "KEY_EVIDENCE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "KEY_RESEARCHERS",
+              "displayName": "KEY_RESEARCHERS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "HOOK_STYLE",
+              "displayName": "HOOK_STYLE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TONE_DIAL",
+              "displayName": "TONE_DIAL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RELATED_VIDEO",
+              "displayName": "RELATED_VIDEO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NOTES",
+              "displayName": "NOTES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
           ]
         },
         "options": {
           "cellFormat": "USER_ENTERED"
         }
       },
+      "id": "0fb99f19-bed7-4b96-9595-4dc682f88593",
+      "name": "Write to Catalog",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1104,
+        48
+      ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "id": "5KlwkkXYEjhrIznj",
           "name": "Google Sheets account"
         }
       }
     },
     {
-      "id": "a1f3e2b0-0010-4c9a-8d7e-999999999999",
+      "parameters": {},
+      "id": "4b0a1db0-fe9f-4804-a5de-648f93df7104",
       "name": "Nothing New to Add",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1700, 460],
-      "parameters": {}
+      "position": [
+        1104,
+        272
+      ]
     }
   ],
+  "pinData": {},
   "connections": {
     "Run Idea Generation": {
       "main": [
-        [{ "node": "Config", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Config": {
       "main": [
         [
-          { "node": "Generate Ideas via Claude", "type": "main", "index": 0 },
-          { "node": "Read Existing Topics",      "type": "main", "index": 0 }
+          {
+            "node": "Generate Ideas via Claude",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Existing Topics",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Generate Ideas via Claude": {
       "main": [
-        [{ "node": "Parse Ideas", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Parse Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Parse Ideas": {
       "main": [
-        [{ "node": "Merge Ideas and Sheet", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Merge Ideas and Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Read Existing Topics": {
       "main": [
-        [{ "node": "Merge Ideas and Sheet", "type": "main", "index": 1 }]
+        [
+          {
+            "node": "Merge Ideas and Sheet",
+            "type": "main",
+            "index": 1
+          }
+        ]
       ]
     },
     "Merge Ideas and Sheet": {
       "main": [
-        [{ "node": "Filter Duplicates", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Filter Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Filter Duplicates": {
       "main": [
-        [{ "node": "Any New Ideas?", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Any New Ideas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Any New Ideas?": {
       "main": [
-        [{ "node": "Write to Catalog",    "type": "main", "index": 0 }],
-        [{ "node": "Nothing New to Add",  "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Write to Catalog",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nothing New to Add",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
   "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate"
   },
+  "versionId": "da0c3617-a8ab-42ce-b7e5-f06544e1bc09",
   "meta": {
-    "instanceId": "ruins-untold-catalog-v1"
-  }
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d73d5ecd47b1bbbfa40ba113fcd873985e55d718c4197ba789a69460481a049c"
+  },
+  "id": "rI7XI1VPvwjpF7qI",
+  "tags": []
 }
