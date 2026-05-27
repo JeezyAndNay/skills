@@ -47,7 +47,7 @@
       "name": "Generate Ideas via Claude",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [600, 340],
+      "position": [600, 200],
       "parameters": {
         "method": "POST",
         "url": "http://host.docker.internal:3333/generate",
@@ -71,10 +71,10 @@
       "name": "Parse Ideas",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [820, 340],
+      "position": [820, 200],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Extract text from claude-bridge.py response\nconst responseText = items[0].json.output.trim();\n\n// Parse the JSON array — handle edge case where model wraps in backticks\nlet ideas;\ntry {\n  ideas = JSON.parse(responseText);\n} catch (e) {\n  const stripped = responseText.replace(/^```json?\\n?|```$/gm, '').trim();\n  try {\n    ideas = JSON.parse(stripped);\n  } catch (e2) {\n    const match = stripped.match(/(\\[\\s*\\{[\\s\\S]*\\}\\s*\\])/);\n    if (!match) throw new Error('Could not parse ideas. Raw: ' + responseText.slice(0, 300));\n    ideas = JSON.parse(match[1]);\n  }\n}\n\nif (!Array.isArray(ideas)) throw new Error('Expected JSON array, got: ' + typeof ideas);\n\n// Normalize a field value — handles string, array, number, or null\nfunction str(val) {\n  if (val === null || val === undefined) return '';\n  if (Array.isArray(val)) return val.join(', ');\n  return String(val).trim();\n}\n\nreturn ideas.map(idea => ({\n  json: {\n    topic:           str(idea.topic),\n    angle:           str(idea.angle),\n    key_evidence:    str(idea.key_evidence),\n    key_researchers: str(idea.key_researchers),\n    hook_style:      str(idea.hook_style),\n    tone_dial:       str(idea.tone_dial || 7),\n    related_video:   str(idea.related_video) || 'none yet'\n  }\n}));"
+        "jsCode": "// Extract text from claude-bridge.py response\nconst responseText = items[0].json.output.trim();\n\n// Parse the JSON array — handle edge case where model wraps in backticks\nlet ideas;\ntry {\n  ideas = JSON.parse(responseText);\n} catch (e) {\n  const stripped = responseText.replace(/^```json?\\n?|```$/gm, '').trim();\n  try {\n    ideas = JSON.parse(stripped);\n  } catch (e2) {\n    const match = stripped.match(/(\\[\\s*\\{[\\s\\S]*\\}\\s*\\])/);\n    if (!match) throw new Error('Could not parse ideas. Raw: ' + responseText.slice(0, 300));\n    ideas = JSON.parse(match[1]);\n  }\n}\n\nif (!Array.isArray(ideas)) throw new Error('Expected JSON array, got: ' + typeof ideas);\n\n// Normalize a field value — handles string, array, number, or null\nfunction str(val) {\n  if (val === null || val === undefined) return '';\n  if (Array.isArray(val)) return val.join(', ');\n  return String(val).trim();\n}\n\n// Tag each item as a new idea so Filter Duplicates can identify it\nreturn ideas.map(idea => ({\n  json: {\n    __type:          'new_idea',\n    topic:           str(idea.topic),\n    angle:           str(idea.angle),\n    key_evidence:    str(idea.key_evidence),\n    key_researchers: str(idea.key_researchers),\n    hook_style:      str(idea.hook_style),\n    tone_dial:       str(idea.tone_dial || 7),\n    related_video:   str(idea.related_video) || 'none yet'\n  }\n}));"
       }
     },
     {
@@ -82,7 +82,7 @@
       "name": "Read Existing Topics",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
-      "position": [1040, 340],
+      "position": [600, 480],
       "parameters": {
         "operation": "read",
         "documentId": {
@@ -108,29 +108,29 @@
       }
     },
     {
-      "id": "a1f3e2b0-0005b-4c9a-8d7e-aaaaaaaaaaaa",
-      "name": "Ensure Flow",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1150, 340],
+      "id": "a1f3e2b0-0006-4c9a-8d7e-cccccccccccc",
+      "name": "Merge Ideas and Sheet",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1040, 340],
       "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "// If the sheet is empty on first run, Read Existing Topics returns 0 items\n// and n8n would stop the flow. Pass a dummy item so Filter Duplicates runs.\nreturn items.length > 0 ? items : [{ json: { TOPIC: '' } }];"
+        "mode": "append",
+        "options": {}
       }
     },
     {
-      "id": "a1f3e2b0-0006-4c9a-8d7e-666666666666",
+      "id": "a1f3e2b0-0007-4c9a-8d7e-666666666666",
       "name": "Filter Duplicates",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1360, 340],
+      "position": [1260, 340],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Collect all existing topic strings from the sheet\n// (items here are sheet rows passed through from Ensure Flow)\nconst existingRows = items;\nconst existingTopics = existingRows\n  .map(row => (row.json.TOPIC || '').toLowerCase().trim())\n  .filter(t => t.length > 0);\n\n// Helper: extract significant words (length > 3, not stop words)\nconst STOP_WORDS = new Set(['that','this','with','from','have','been','were','they','their','what','when','where','which','will','would','could','should','about','than','then','into','over','after','before','under','above','between','through','during','found','built','used','made']);\n\nfunction sigWords(str) {\n  return str.toLowerCase()\n    .replace(/[^a-z0-9\\s]/g, '')\n    .split(/\\s+/)\n    .filter(w => w.length > 3 && !STOP_WORDS.has(w));\n}\n\n// Pull the newly generated ideas from the Parse Ideas node upstream\n// (not from items, which are the sheet rows)\nconst newIdeas = $('Parse Ideas').all();\nconst uniqueIdeas = [];\n\nfor (const idea of newIdeas) {\n  const topic = (idea.json.topic || '').toLowerCase().trim();\n\n  // 1. Exact match\n  if (existingTopics.includes(topic)) continue;\n\n  // 2. Key-word overlap: flag as duplicate if >=60% of significant words match any existing topic\n  const newWords = sigWords(topic);\n  const isDuplicate = newWords.length > 0 && existingTopics.some(existing => {\n    const existWords = sigWords(existing);\n    if (existWords.length === 0) return false;\n    const overlap = newWords.filter(w => existWords.includes(w)).length;\n    return overlap / newWords.length >= 0.6;\n  });\n\n  if (!isDuplicate) uniqueIdeas.push(idea);\n}\n\nreturn uniqueIdeas.length > 0 ? uniqueIdeas : [{ json: { __noNewIdeas: true } }];"
+        "jsCode": "// Items are a mix of new ideas (tagged __type: 'new_idea') and existing sheet rows\nconst newIdeas    = items.filter(i => i.json.__type === 'new_idea');\nconst existingRows = items.filter(i => i.json.__type !== 'new_idea');\n\nconst existingTopics = existingRows\n  .map(row => (row.json.TOPIC || '').toLowerCase().trim())\n  .filter(t => t.length > 0);\n\n// Helper: extract significant words (length > 3, not stop words)\nconst STOP_WORDS = new Set(['that','this','with','from','have','been','were','they','their','what','when','where','which','will','would','could','should','about','than','then','into','over','after','before','under','above','between','through','during','found','built','used','made']);\n\nfunction sigWords(str) {\n  return str.toLowerCase()\n    .replace(/[^a-z0-9\\s]/g, '')\n    .split(/\\s+/)\n    .filter(w => w.length > 3 && !STOP_WORDS.has(w));\n}\n\nconst uniqueIdeas = [];\n\nfor (const idea of newIdeas) {\n  const topic = (idea.json.topic || '').toLowerCase().trim();\n\n  // 1. Exact match\n  if (existingTopics.includes(topic)) continue;\n\n  // 2. Keyword overlap: duplicate if >=60% of significant words match any existing topic\n  const newWords = sigWords(topic);\n  const isDuplicate = newWords.length > 0 && existingTopics.some(existing => {\n    const existWords = sigWords(existing);\n    if (existWords.length === 0) return false;\n    const overlap = newWords.filter(w => existWords.includes(w)).length;\n    return overlap / newWords.length >= 0.6;\n  });\n\n  if (!isDuplicate) uniqueIdeas.push(idea);\n}\n\nreturn uniqueIdeas.length > 0 ? uniqueIdeas : [{ json: { __noNewIdeas: true } }];"
       }
     },
     {
-      "id": "a1f3e2b0-0007-4c9a-8d7e-777777777777",
+      "id": "a1f3e2b0-0008-4c9a-8d7e-777777777777",
       "name": "Any New Ideas?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -159,7 +159,7 @@
       }
     },
     {
-      "id": "a1f3e2b0-0008-4c9a-8d7e-888888888888",
+      "id": "a1f3e2b0-0009-4c9a-8d7e-888888888888",
       "name": "Write to Catalog",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
@@ -216,7 +216,7 @@
       }
     },
     {
-      "id": "a1f3e2b0-0009-4c9a-8d7e-999999999999",
+      "id": "a1f3e2b0-0010-4c9a-8d7e-999999999999",
       "name": "Nothing New to Add",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -232,7 +232,10 @@
     },
     "Config": {
       "main": [
-        [{ "node": "Generate Ideas via Claude", "type": "main", "index": 0 }]
+        [
+          { "node": "Generate Ideas via Claude", "type": "main", "index": 0 },
+          { "node": "Read Existing Topics",      "type": "main", "index": 0 }
+        ]
       ]
     },
     "Generate Ideas via Claude": {
@@ -242,15 +245,15 @@
     },
     "Parse Ideas": {
       "main": [
-        [{ "node": "Read Existing Topics", "type": "main", "index": 0 }]
+        [{ "node": "Merge Ideas and Sheet", "type": "main", "index": 0 }]
       ]
     },
     "Read Existing Topics": {
       "main": [
-        [{ "node": "Ensure Flow", "type": "main", "index": 0 }]
+        [{ "node": "Merge Ideas and Sheet", "type": "main", "index": 1 }]
       ]
     },
-    "Ensure Flow": {
+    "Merge Ideas and Sheet": {
       "main": [
         [{ "node": "Filter Duplicates", "type": "main", "index": 0 }]
       ]
@@ -262,8 +265,8 @@
     },
     "Any New Ideas?": {
       "main": [
-        [{ "node": "Write to Catalog", "type": "main", "index": 0 }],
-        [{ "node": "Nothing New to Add", "type": "main", "index": 0 }]
+        [{ "node": "Write to Catalog",    "type": "main", "index": 0 }],
+        [{ "node": "Nothing New to Add",  "type": "main", "index": 0 }]
       ]
     }
   },
