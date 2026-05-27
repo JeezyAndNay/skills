@@ -355,18 +355,14 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
-        "authentication": "genericCredentialType",
+        "url": "http://host.docker.internal:3333/generate",
+        "authentication": "none",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "anthropic-version",
-              "value": "2023-06-01"
-            },
-            {
-              "name": "content-type",
+              "name": "Content-Type",
               "value": "application/json"
             }
           ]
@@ -374,9 +370,9 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ model: 'claude-opus-4-7', max_tokens: 16000, system: 'You are revising a Ruins Untold YouTube script. Apply the same style guide as before. Incorporate the specific revision feedback provided. Keep all approved sections intact.', messages: [{ role: 'user', content: 'ORIGINAL SCRIPT:\\n' + $json.scriptText + '\\n\\nREVISION FEEDBACK: ' + $json['Revision Notes'] + '\\n\\nPlease revise the script incorporating this feedback while maintaining all Ruins Untold style guidelines. Output the complete revised script, hook variants, thumbnail concept, visual prompts table, and chapter markers.' }] }) }}",
+        "body": "={{ JSON.stringify({\n  prompt:\n    \"You are revising a Ruins Untold YouTube script. Apply the same style guide as before. Incorporate the specific revision feedback provided. Keep all approved sections intact.\"\n    + \"\\n\\n---\\n\\n\"\n    + 'ORIGINAL SCRIPT:\\n' + $json.scriptText + '\\n\\nREVISION FEEDBACK: ' + $json['Revision Notes'] + '\\n\\nPlease revise the script incorporating this feedback while maintaining all Ruins Untold style guidelines. Output the complete revised script, hook variants, thumbnail concept, visual prompts table, and chapter markers.'\n}) }}",
         "options": {
-          "timeout": 120000
+          "timeout": 600000
         }
       },
       "id": "node-09-revise-script",
@@ -386,17 +382,11 @@
       "position": [
         1920,
         512
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "mkdg6co1DLJ0gHMk",
-          "name": "Header Auth account"
-        }
-      }
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const response = $input.item.json;\nconst fullText = response.content[0].text;\n\nconst scriptMatch = fullText.match(/(?:#{1,2}\\s*SCRIPT|1\\.\\s*SCRIPT)[\\s\\S]*?(?=(?:#{1,2}\\s*HOOK VARIANTS|2\\.\\s*HOOK)|$)/i);\nconst promptsMatch = fullText.match(/(?:#{1,2}\\s*VISUAL PROMPTS?|4\\.\\s*VISUAL)[\\s\\S]*?(?=(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)|$)/i);\nconst chaptersMatch = fullText.match(/(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)[\\s\\S]*$/i);\nconst thumbMatch = fullText.match(/(?:#{1,2}\\s*THUMBNAIL|3\\.\\s*THUMB)[\\s\\S]*?(?=(?:#{1,2}\\s*VISUAL|4\\.)|$)/i);\n\nconst scriptText = scriptMatch ? scriptMatch[0].trim() : fullText;\nconst voiceoverText = scriptText\n  .replace(/\\[.*?\\]/g, '').replace(/\\(.*?\\)/g, '')\n  .replace(/^\\s*(#{1,3}.*|[A-Z\\s]+:.*|\\d+:\\d+.*|---.*)/gm, '')\n  .replace(/\\n{3,}/g, '\\n\\n').trim();\n\nconst prevVars = $('Set Project Variables').item.json;\n\nreturn [{ json: {\n  ...prevVars,\n  fullOutput: fullText,\n  scriptText,\n  voiceoverText,\n  visualPromptsTable: promptsMatch ? promptsMatch[0].trim() : '',\n  chapterMarkers: chaptersMatch ? chaptersMatch[0].trim() : '',\n  thumbnailConcept: thumbMatch ? thumbMatch[0].trim() : '',\n  characterCount: voiceoverText.length,\n  estimatedMinutes: Math.round(voiceoverText.split(' ').length / 140)\n}}];"
+        "jsCode": "const response = $input.item.json;\nconst fullText = response.output;\n\nconst scriptMatch = fullText.match(/(?:#{1,2}\\s*SCRIPT|1\\.\\s*SCRIPT)[\\s\\S]*?(?=(?:#{1,2}\\s*HOOK VARIANTS|2\\.\\s*HOOK)|$)/i);\nconst promptsMatch = fullText.match(/(?:#{1,2}\\s*VISUAL PROMPTS?|4\\.\\s*VISUAL)[\\s\\S]*?(?=(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)|$)/i);\nconst chaptersMatch = fullText.match(/(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)[\\s\\S]*$/i);\nconst thumbMatch = fullText.match(/(?:#{1,2}\\s*THUMBNAIL|3\\.\\s*THUMB)[\\s\\S]*?(?=(?:#{1,2}\\s*VISUAL|4\\.)|$)/i);\n\nconst scriptText = scriptMatch ? scriptMatch[0].trim() : fullText;\nconst voiceoverText = scriptText\n  .replace(/\\[.*?\\]/g, '').replace(/\\(.*?\\)/g, '')\n  .replace(/^\\s*(#{1,3}.*|[A-Z\\s]+:.*|\\d+:\\d+.*|---.*)/gm, '')\n  .replace(/\\n{3,}/g, '\\n\\n').trim();\n\nconst prevVars = $('Set Project Variables').item.json;\n\nreturn [{ json: {\n  ...prevVars,\n  fullOutput: fullText,\n  scriptText,\n  voiceoverText,\n  visualPromptsTable: promptsMatch ? promptsMatch[0].trim() : '',\n  chapterMarkers: chaptersMatch ? chaptersMatch[0].trim() : '',\n  thumbnailConcept: thumbMatch ? thumbMatch[0].trim() : '',\n  characterCount: voiceoverText.length,\n  estimatedMinutes: Math.round(voiceoverText.split(' ').length / 140)\n}}];"
       },
       "id": "node-10-parse-revised",
       "name": "Parse Revised Script",
@@ -562,18 +552,14 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
-        "authentication": "genericCredentialType",
+        "url": "http://host.docker.internal:3333/generate",
+        "authentication": "none",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "anthropic-version",
-              "value": "2023-06-01"
-            },
-            {
-              "name": "content-type",
+              "name": "Content-Type",
               "value": "application/json"
             }
           ]
@@ -581,9 +567,9 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ model: 'claude-opus-4-7', max_tokens: 8000, system: 'You are a video post-production supervisor for Ruins Untold YouTube channel. Analyze scripts and identify precise placement cues for visual media, background music, and sound effects. Output structured JSON only.', messages: [{ role: 'user', content: 'Analyze this script and identify where images, video clips, background music, and sound effects should be placed. For each cue output a JSON array with objects: {type: \"image\"|\"video\"|\"music\"|\"sfx\", timestamp: \"MM:SS\", duration_seconds: N, description: \"...\", mood: \"...\", script_line: \"first few words of line\"}.\\n\\nRules:\\n- Images: for slower, static moments or evidence presentation\\n- Videos: for dramatic reveals, establishing shots, action sequences\\n- Music: background scoring (note: underscore, peak, outro)\\n- SFX: punctuation sounds (wind, impact, rumble, breath)\\n\\nSCRIPT:\\n' + $json.scriptText }] }) }}",
+        "body": "={{ JSON.stringify({\n  prompt:\n    \"You are a video post-production supervisor for Ruins Untold YouTube channel. Analyze scripts and identify precise placement cues for visual media, background music, and sound effects. Output structured JSON only.\"\n    + \"\\n\\n---\\n\\n\"\n    + 'Analyze this script and identify where images, video clips, background music, and sound effects should be placed. For each cue output a JSON array with objects: {type: \"image\"|\"video\"|\"music\"|\"sfx\", timestamp: \"MM:SS\", duration_seconds: N, description: \"...\", mood: \"...\", script_line: \"first few words of line\"}.\\n\\nRules:\\n- Images: for slower, static moments or evidence presentation\\n- Videos: for dramatic reveals, establishing shots, action sequences\\n- Music: background scoring (note: underscore, peak, outro)\\n- SFX: punctuation sounds (wind, impact, rumble, breath)\\n\\nSCRIPT:\\n' + $json.scriptText\n}) }}",
         "options": {
-          "timeout": 120000
+          "timeout": 600000
         }
       },
       "id": "node-16-claude-analyze",
@@ -593,29 +579,19 @@
       "position": [
         2880,
         304
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "mkdg6co1DLJ0gHMk",
-          "name": "Header Auth account"
-        }
-      }
+      ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
-        "authentication": "genericCredentialType",
+        "url": "http://host.docker.internal:3333/generate",
+        "authentication": "none",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "anthropic-version",
-              "value": "2023-06-01"
-            },
-            {
-              "name": "content-type",
+              "name": "Content-Type",
               "value": "application/json"
             }
           ]
@@ -623,9 +599,9 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ model: 'claude-opus-4-7', max_tokens: 16000, system: 'You generate structured asset prompt arrays for a YouTube documentary production pipeline. Output only valid JSON arrays, no markdown.', messages: [{ role: 'user', content: 'Based on this visual prompts table and placement analysis, generate four JSON arrays:\\n\\n1. IMAGE_PROMPTS: array of {index: N, timestamp: \"MM:SS\", nb2_prompt: {12-field NB2 JSON}, filename: \"img_NNNN.png\"}\\n   NB2 locked fields: style:\"Photorealistic, cinematic, 8K\", color_palette:[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"], lighting:\"golden hour sidelighting or deep chiaroscuro shadow\", mood:\"ancient, mysterious, slightly ominous\", negative_constraints:[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]\\n\\n2. VIDEO_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: 8, veo_prompt: \"[Cinematography]+[Subject]+[Action]+[Context]+[Style] 100-150 words with Dialogue: SFX: Ambient: audio layers\", filename: \"vid_NNNN.mp4\"}\\n\\n3. MUSIC_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: N, type: \"underscore\"|\"peak\"|\"outro\", prompt: \"ElevenLabs sound generation prompt for cinematic background music\", filename: \"music_NN.mp3\"}\\n\\n4. SFX_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: N, prompt: \"ElevenLabs sound generation prompt for sound effect\", filename: \"sfx_NN.mp3\"}\\n\\nVISUAL PROMPTS TABLE:\\n' + $json.visualPromptsTable + '\\n\\nPLACEMENT ANALYSIS:\\n' + $('Analyze Media Placement — Claude').item.json.content[0].text }] }) }}",
+        "body": "={{ JSON.stringify({\n  prompt:\n    \"You generate structured asset prompt arrays for a YouTube documentary production pipeline. Output only valid JSON arrays, no markdown.\"\n    + \"\\n\\n---\\n\\n\"\n    + 'Based on this visual prompts table and placement analysis, generate four JSON arrays:\\n\\n1. IMAGE_PROMPTS: array of {index: N, timestamp: \"MM:SS\", nb2_prompt: {12-field NB2 JSON}, filename: \"img_NNNN.png\"}\\n   NB2 locked fields: style:\"Photorealistic, cinematic, 8K\", color_palette:[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"], lighting:\"golden hour sidelighting or deep chiaroscuro shadow\", mood:\"ancient, mysterious, slightly ominous\", negative_constraints:[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]\\n\\n2. VIDEO_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: 8, veo_prompt: \"[Cinematography]+[Subject]+[Action]+[Context]+[Style] 100-150 words with Dialogue: SFX: Ambient: audio layers\", filename: \"vid_NNNN.mp4\"}\\n\\n3. MUSIC_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: N, type: \"underscore\"|\"peak\"|\"outro\", prompt: \"ElevenLabs sound generation prompt for cinematic background music\", filename: \"music_NN.mp3\"}\\n\\n4. SFX_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: N, prompt: \"ElevenLabs sound generation prompt for sound effect\", filename: \"sfx_NN.mp3\"}\\n\\nVISUAL PROMPTS TABLE:\\n' + $json.visualPromptsTable + '\\n\\nPLACEMENT ANALYSIS:\\n' + $('Analyze Media Placement — Claude').item.json.content[0].text\n}) }}",
         "options": {
-          "timeout": 120000
+          "timeout": 600000
         }
       },
       "id": "node-17-claude-prompts",
@@ -635,17 +611,11 @@
       "position": [
         3120,
         304
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "mkdg6co1DLJ0gHMk",
-          "name": "Header Auth account"
-        }
-      }
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const response = $input.item.json;\nconst rawText = response.content[0].text;\n\nlet imagePrompts = [], videoPrompts = [], musicPrompts = [], sfxPrompts = [];\n\ntry {\n  const imgMatch = rawText.match(/IMAGE_PROMPTS[^\\[]*([\\s\\S]*?)(?=VIDEO_PROMPTS|$)/i);\n  const vidMatch = rawText.match(/VIDEO_PROMPTS[^\\[]*([\\s\\S]*?)(?=MUSIC_PROMPTS|$)/i);\n  const musMatch = rawText.match(/MUSIC_PROMPTS[^\\[]*([\\s\\S]*?)(?=SFX_PROMPTS|$)/i);\n  const sfxMatch = rawText.match(/SFX_PROMPTS[^\\[]*([\\s\\S]*?)(?=\\n\\n[A-Z]|$)/i);\n\n  const extractArray = (match) => {\n    if (!match) return [];\n    const arrMatch = match[0].match(/\\[[\\s\\S]*\\]/);\n    if (!arrMatch) return [];\n    try { return JSON.parse(arrMatch[0]); } catch(e) { return []; }\n  };\n\n  imagePrompts = extractArray(imgMatch);\n  videoPrompts = extractArray(vidMatch);\n  musicPrompts = extractArray(musMatch);\n  sfxPrompts = extractArray(sfxMatch);\n} catch(e) {\n  console.error('Prompt parse error:', e.message);\n}\n\nconst prevData = $('Parse Script Response').item.json;\n\nreturn [{ json: {\n  ...prevData,\n  imagePrompts,\n  videoPrompts,\n  musicPrompts,\n  sfxPrompts,\n  rawPromptsOutput: rawText,\n  imageTotalCount: imagePrompts.length,\n  videoTotalCount: videoPrompts.length,\n  musicTotalCount: musicPrompts.length,\n  sfxTotalCount: sfxPrompts.length\n}}];"
+        "jsCode": "const response = $input.item.json;\nconst rawText = response.output;\n\nlet imagePrompts = [], videoPrompts = [], musicPrompts = [], sfxPrompts = [];\n\ntry {\n  const imgMatch = rawText.match(/IMAGE_PROMPTS[^\\[]*([\\s\\S]*?)(?=VIDEO_PROMPTS|$)/i);\n  const vidMatch = rawText.match(/VIDEO_PROMPTS[^\\[]*([\\s\\S]*?)(?=MUSIC_PROMPTS|$)/i);\n  const musMatch = rawText.match(/MUSIC_PROMPTS[^\\[]*([\\s\\S]*?)(?=SFX_PROMPTS|$)/i);\n  const sfxMatch = rawText.match(/SFX_PROMPTS[^\\[]*([\\s\\S]*?)(?=\\n\\n[A-Z]|$)/i);\n\n  const extractArray = (match) => {\n    if (!match) return [];\n    const arrMatch = match[0].match(/\\[[\\s\\S]*\\]/);\n    if (!arrMatch) return [];\n    try { return JSON.parse(arrMatch[0]); } catch(e) { return []; }\n  };\n\n  imagePrompts = extractArray(imgMatch);\n  videoPrompts = extractArray(vidMatch);\n  musicPrompts = extractArray(musMatch);\n  sfxPrompts = extractArray(sfxMatch);\n} catch(e) {\n  console.error('Prompt parse error:', e.message);\n}\n\nconst prevData = $('Parse Script Response').item.json;\n\nreturn [{ json: {\n  ...prevData,\n  imagePrompts,\n  videoPrompts,\n  musicPrompts,\n  sfxPrompts,\n  rawPromptsOutput: rawText,\n  imageTotalCount: imagePrompts.length,\n  videoTotalCount: videoPrompts.length,\n  musicTotalCount: musicPrompts.length,\n  sfxTotalCount: sfxPrompts.length\n}}];"
       },
       "id": "node-18-parse-prompts",
       "name": "Parse Asset Prompts",
