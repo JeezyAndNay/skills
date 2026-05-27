@@ -1,0 +1,90 @@
+{
+  "channel": "Ruins Untold",
+  "description": "Channel-level configuration for asset generation. All episode generators read this file before classifying scenes.",
+
+  "pinned_clips": [
+    {
+      "id": "channel_intro",
+      "trigger_phrases": ["welcome to ruins untold"],
+      "match": "contains",
+      "asset_type": "video",
+      "asset_path": "/Users/jneal/Desktop/Youtube/Ruins_Untold/Channel Images/Figure_walks_toward_cosmic_swirls_202605151226.mp4",
+      "duration_seconds": 6,
+      "description": "Channel intro — figure walks toward cosmic swirls",
+      "notes": "Used in place of any generated video prompt when the voiceover says 'Welcome to Ruins Untold'. Copy this file into the episode's /videos/ directory as the assigned filename before running assemble.sh."
+    }
+  ],
+
+  "pinned_images": [],
+
+  "style_constants": {
+    "style": "Photorealistic, cinematic, 8K",
+    "palette": ["cinematic teal-orange desaturation", "deep shadow accent", "warm ochre highlights"],
+    "lighting": "golden hour sidelighting or deep chiaroscuro shadow",
+    "negative": ["no modern elements", "no flat lighting", "no extra limbs", "no motion blur"],
+    "negative_doc": ["no modern elements", "no glare", "no reflections", "no overexposure"],
+    "negative_vid": ["no camera shake", "no modern elements", "no lens flare", "no overexposure"]
+  },
+
+  "timing": {
+    "image_interval_seconds": 7,
+    "video_every_n_cues": 4,
+    "max_consecutive_same_scene": 3,
+    "crossfade_duration_seconds": 0.5,
+    "j_cut_offset_seconds": 1.5
+  },
+
+  "thumbnail": {
+    "dimensions": "1280x720",
+    "aspect_ratio": "16:9",
+    "note": "YouTube thumbnail. Must read clearly at 320x180 (suggested) and 168x94 (search). Extreme visual contrast required.",
+
+    "hero_visual": {
+      "subject": "archaeological site or artifact — dramatic, high-contrast, fills lower 80% of frame",
+      "composition": "wide establishing or extreme close-up — never medium shot; thumbnails live or die on scale",
+      "framing": "top 20% of frame intentionally left darker or blurred for text overlay — do not place subject there",
+      "depth": "strong foreground subject with atmospheric background — layered depth reads at small sizes",
+      "style": "Photorealistic, cinematic, 8K, ultra-sharp, extreme clarity",
+      "color_palette": ["cinematic teal-orange desaturation", "deep shadow accent", "warm ochre highlights"],
+      "lighting": "golden hour sidelighting or deep chiaroscuro shadow — never flat, never uniform",
+      "negative": ["no modern elements", "no flat lighting", "no extra limbs", "no text", "no watermarks", "no logos", "no motion blur", "no people", "no faces"]
+    },
+
+    "text_overlay": {
+      "position": "top third",
+      "zone_height_pct": 22,
+      "style": "distressed archival stamp or stencil — aged, weathered, institutional",
+      "case": "ALL CAPS",
+      "weight": "ultra-bold / heavy",
+      "color_primary": "#F5E6C8",
+      "color_stroke": "#1A0F00",
+      "stroke_width_px": 3,
+      "max_words": 7,
+      "emotional_register": "conspiracy / suppression",
+      "approved_openers": [
+        "THEY DESTROYED", "THEY BURIED", "THEY ERASED", "THEY HID",
+        "THE [NOUN] THEY", "WHAT THE [INSTITUTION] HID", "BURIED IN THE"
+      ],
+      "never_use": ["SHOCKING", "AMAZING", "YOU WON'T BELIEVE", "MIND-BLOWING"]
+    },
+
+    "branding": {
+      "channel_name": "RUINS UNTOLD",
+      "position": "bottom-right",
+      "margin_px": 18,
+      "style": "small distressed stamp, matching text treatment, 60% opacity",
+      "color": "#F5E6C8"
+    },
+
+    "variants_per_episode": 3,
+    "variant_types": ["evidence", "site", "atmospheric"]
+  },
+
+  "transcription": {
+    "tool": "whisper-cpp",
+    "model": "ggml-base.en.bin",
+    "model_path": "/usr/local/share/whisper-cpp/ggml-base.en.bin",
+    "binary": "/usr/local/opt/whisper-cpp/bin/whisper-cli",
+    "flags": "--language en -ml 80 -sow -osrt -t 8"
+  }
+}

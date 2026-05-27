@@ -1,0 +1,3629 @@
+{
+  "updatedAt": "2026-05-20T20:00:16.934Z",
+  "createdAt": "2026-05-18T19:06:43.033Z",
+  "id": "ruins-untold-pipeline-v1",
+  "name": "Ruins Untold — YouTube Production Pipeline",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "node-00a-manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        304
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "node-00b-read-sheet",
+      "name": "Read Ruins Untold Ideas",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -720,
+        304
+      ],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_SPREADSHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "gid"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:H11"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "node-00c-aggregate",
+      "name": "Aggregate Topics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        304
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows = $input.all();\n\n// Build numbered display list (TOPIC column only)\nconst topicList = rows\n  .map((item, i) => `${i + 1}. ${item.json.TOPIC || '(no topic)'}`)\n  .join('\\n');\n\n// Stash all row data as JSON string for the lookup node\nconst allRows = rows.map(r => r.json);\n\nreturn [{\n  json: {\n    topicList,\n    allRows: JSON.stringify(allRows),\n    count: rows.length\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "node-00d-select-form",
+      "name": "Select Episode Topic",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        304
+      ],
+      "webhookId": "ruins-untold-topic-select",
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Ruins Untold — Select Episode Topic",
+        "formDescription": "={{ 'Available topics from Ruins_Untold_Ideas:\\n\\n' + $json.topicList + '\\n\\nEnter the number of the topic you want to develop.' }}",
+        "responseMode": "lastNode",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Selection",
+              "fieldType": "number",
+              "placeholder": "1",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "VOICE_ID",
+              "fieldType": "text",
+              "placeholder": "ElevenLabs voice ID (leave blank to use channel default)",
+              "requiredField": false
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "node-00e-lookup",
+      "name": "Look Up Selected Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        304
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const selection = parseInt($json.Selection, 10);\nconst voiceId   = ($json.VOICE_ID || '').trim();\n\n// Retrieve all rows cached before the Wait node\nconst allRows = JSON.parse($('Aggregate Topics').item.json.allRows);\n\nif (!selection || selection < 1 || selection > allRows.length) {\n  throw new Error(\n    `Invalid selection \"${$json.Selection}\". Enter 1–${allRows.length}.`\n  );\n}\n\nconst row = allRows[selection - 1];\n\nreturn [{\n  json: {\n    TOPIC:            row.TOPIC            || '',\n    ANGLE:            row.ANGLE            || '',\n    KEY_EVIDENCE:     row.KEY_EVIDENCE     || '',\n    KEY_RESEARCHERS:  row.KEY_RESEARCHERS  || '',\n    RELATED_VIDEO:    row.RELATED_VIDEO    || 'N/A',\n    HOOK_STYLE:       row.HOOK_STYLE        || 'contradiction',\n    TONE_DIAL:        parseInt(row.TONE_DIAL, 10) || 7,\n    VOICE_ID:         voiceId || row.VOICE_ID || ''\n  }\n}];\n"
+      }
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pv-topic",
+              "name": "TOPIC",
+              "value": "={{ $json.TOPIC }}",
+              "type": "string"
+            },
+            {
+              "id": "pv-angle",
+              "name": "ANGLE",
+              "value": "={{ $json.ANGLE }}",
+              "type": "string"
+            },
+            {
+              "id": "pv-evidence",
+              "name": "KEY_EVIDENCE",
+              "value": "={{ $json.KEY_EVIDENCE }}",
+              "type": "string"
+            },
+            {
+              "id": "pv-researchers",
+              "name": "KEY_RESEARCHERS",
+              "value": "={{ $json.KEY_RESEARCHERS }}",
+              "type": "string"
+            },
+            {
+              "id": "pv-related",
+              "name": "RELATED_VIDEO",
+              "value": "={{ $json.RELATED_VIDEO || 'N/A' }}",
+              "type": "string"
+            },
+            {
+              "id": "pv-hook",
+              "name": "HOOK_STYLE",
+              "value": "={{ $json.HOOK_STYLE }}",
+              "type": "string"
+            },
+            {
+              "id": "pv-tone",
+              "name": "TONE_DIAL",
+              "value": "={{ $json.TONE_DIAL || 7 }}",
+              "type": "number"
+            },
+            {
+              "id": "pv-voice",
+              "name": "VOICE_ID",
+              "value": "={{ $json.VOICE_ID }}",
+              "type": "string"
+            },
+            {
+              "id": "pv-slug",
+              "name": "projectSlug",
+              "value": "={{ $json.TOPIC.toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 40) + '_' + new Date().toISOString().replace(/[^0-9]/g, '').substring(0, 12) }}",
+              "type": "string"
+            },
+            {
+              "id": "pv-dir",
+              "name": "projectDir",
+              "value": "={{ '/Users/jneal/Antigravity/out/' + $json.TOPIC.toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 40) + '_' + new Date().toISOString().replace(/[^0-9]/g, '').substring(0, 12) }}",
+              "type": "string"
+            },
+            {
+              "id": "pv-revision",
+              "name": "revisionNotes",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "pv-vorev",
+              "name": "voiceoverRevisionNotes",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-02-set-vars",
+      "name": "Set Project Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        240,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{ 'mkdir -p \"' + $json.projectDir + '/audio\" \"' + $json.projectDir + '/images\" \"' + $json.projectDir + '/videos\" \"' + $json.projectDir + '/scripts\" \"' + $json.projectDir + '/music\" \"' + $json.projectDir + '/sfx\" && echo \"Directories created: ' + $json.projectDir + '\"' }}"
+      },
+      "id": "node-03-mkdir",
+      "name": "Create Project Directories",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        480,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  model: 'claude-opus-4-7',\n  max_tokens: 16000,\n  system: `You are the lead scriptwriter for Ruins Untold, a long-form YouTube channel exploring ancient mysteries, forbidden archaeology, and alternative history. Your job is to write scripts that sound like they were written by the host — not by an AI.\n\nCHANNEL IDENTITY\nChannel name: Ruins Untold\nFormat: Long-form YouTube (~20 minutes per video)\nCore premise: The gap between mainstream historical narrative and the physical, geological, and archaeological evidence that mainstream academia cannot — or will not — adequately explain.\nChannel promise: \"We go where the evidence leads, even when it leads somewhere uncomfortable.\"\n\nTONE PROFILE\nPRIMARY VOICE — Conversational authority. You know this material deeply. You have done the research. But you are sharing it with a friend, not presenting a dissertation. Never academic. Never breathless. Measured, deliberate, occasionally wry.\n\nCONSPIRATORIAL REGISTER — Slightly conspiratorial, never unhinged. The framing is always: \"Here is what the evidence shows. Draw your own conclusions.\" Never state unfalsifiable claims as fact. \"Suggests\" and \"points toward\" are your hedges. Use them.\n\nSELF-AWARE DISCLAIMERS — Maximum two per script. Approved forms: \"Look, I know how this sounds...\", \"I'm not saying this is proof of anything, but...\", \"I'm no conspiracy theorist, but you have to ask...\", \"Bear with me here.\"\n\nTHE COLLECTIVE WE — Use: \"We've been told...\", \"What we're looking at here...\", \"Come with me as we explore...\", \"We're not supposed to ask this question.\"\n\nPACING — Build slowly. Use \"...\" to mark deliberate pause. Short sentences for emphasis.\n\nAUDIENCE: Age 25-65, global English-speaking. Skeptical of institutional authority. Not fringe. Global clarity — no idioms, American sports metaphors, or British slang.\n\nSCRIPT STRUCTURE — 20-MINUTE LONG FORM\n\nHOOK (0:00–0:45): Open inside the mystery. Do not introduce channel or host first. Hook formats: QUESTION (three escalating questions, third has no mainstream answer), PARADOX (two facts that cannot both be true), EVIDENCE (open on the anomaly), CONTRADICTION (state mainstream claim, then the physical evidence against it). Always end: \"Welcome to Ruins Untold. Come with me as we explore this together.\"\n\nCONTEXT BRIDGE (0:45–2:30): Establish mainstream position fairly. Tone: measured, slightly dry.\n\nACT 1 — THE OFFICIAL STORY (2:30–6:00): Honest detail of consensus model. Pattern interrupt at ~5:00.\n\nACT 2 — THE ANOMALIES (6:00–12:00): Each anomaly: (1) State clearly, (2) Why mainstream explanation insufficient, (3) \"We will come back to what this means.\" Pattern interrupt at ~8:30 (change angle). Pattern interrupt at ~11:00 (emotional peak: \"Here's where it gets uncomfortable.\").\n\nACT 3 — THE ALTERNATIVE INTERPRETATION (12:00–17:30): Alternative model with specificity. Cite real researchers. Approved: Graham Hancock, Randall Carlson, Robert Schoch, John Anthony West, Brien Foerster, James Kennett, Allen West, Christopher Moore, Andrew Collins, Michael Cremo. Pattern interrupt at ~14:30 (self-aware disclaimer).\n\nRESOLUTION + CTA (17:30–20:00): (1) Summary without mainstream framing, (2) \"The question isn't whether this existed. The question is why we are not allowed to ask.\", (3) Subscribe CTA + comment + related video, (4) Episode tease.\n\nLANGUAGE RULES\nALWAYS: Present tense for evidence. Short sentences. \"...\" for pause. Hedged language. \"We\" for collective discovery.\nNEVER: \"delve\", \"captivating\", \"fascinating\", \"it's worth noting\", \"in conclusion\", academic passive voice, \"In today's video\", \"Make sure to like and subscribe\" before CTA, \"As we all know\", \"Throughout history\", condescension toward academics, unverifiable claims as fact.\n\nLOCKED VOICE SAMPLE: \"Why did every ancient civilization suddenly stop building around 1200 BC? Was it climate change?...Was it caused by humans?...Or was it something else entirely?...Welcome to Ruins Untold...Come with me as we explore these questions together.\"\n\nOUTPUT FORMAT — produce exactly:\n1. SCRIPT — Full 20-minute script with timestamps and section headers\n2. HOOK VARIANTS — 2 alternative hooks (other two formats)\n3. CHAPTER MARKERS — YouTube timestamps`,\n  messages: [{\n    role: 'user',\n    content: 'TOPIC: ' + $('Set Project Variables').item.json.TOPIC + '\\nANGLE: ' + $('Set Project Variables').item.json.ANGLE + '\\nKEY_EVIDENCE: ' + $('Set Project Variables').item.json.KEY_EVIDENCE + '\\nKEY_RESEARCHERS: ' + $('Set Project Variables').item.json.KEY_RESEARCHERS + '\\nRELATED_VIDEO: ' + $('Set Project Variables').item.json.RELATED_VIDEO + '\\nHOOK_STYLE: ' + $('Set Project Variables').item.json.HOOK_STYLE + '\\nTONE_DIAL: ' + $('Set Project Variables').item.json.TONE_DIAL + ($('Set Project Variables').item.json.revisionNotes ? '\\n\\nREVISION NOTES FROM PREVIOUS DRAFT: ' + $('Set Project Variables').item.json.revisionNotes : '')\n  }]\n}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "node-04-claude-script",
+      "name": "Generate Script — Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        720,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mkdg6co1DLJ0gHMk",
+          "name": "Header Auth account"
+        },
+        "anthropicApi": {
+          "id": "iVpBXuoEd2MVv9fg",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json;\nconst fullText = response.content[0].text;\n\n// Split sections\nconst scriptMatch = fullText.match(/(?:#{1,2}\\s*SCRIPT|1\\.\\s*SCRIPT)[\\s\\S]*?(?=(?:#{1,2}\\s*HOOK VARIANTS|2\\.\\s*HOOK)|$)/i);\nconst hookVarsMatch = fullText.match(/(?:#{1,2}\\s*HOOK VARIANTS|2\\.\\s*HOOK)[\\s\\S]*?(?=(?:#{1,2}\\s*THUMBNAIL|3\\.\\s*THUMB)|$)/i);\nconst thumbMatch = fullText.match(/(?:#{1,2}\\s*THUMBNAIL|3\\.\\s*THUMB)[\\s\\S]*?(?=(?:#{1,2}\\s*VISUAL|4\\.\\s*VISUAL)|$)/i);\nconst promptsMatch = fullText.match(/(?:#{1,2}\\s*VISUAL PROMPTS?|4\\.\\s*VISUAL)[\\s\\S]*?(?=(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)|$)/i);\nconst chaptersMatch = fullText.match(/(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)[\\s\\S]*$/i);\n\nconst scriptText = scriptMatch ? scriptMatch[0].trim() : fullText;\nconst voiceoverText = scriptText\n  .replace(/\\[.*?\\]/g, '')\n  .replace(/\\(.*?\\)/g, '')\n  .replace(/^\\s*(#{1,3}.*|[A-Z\\s]+:.*|\\d+:\\d+.*|---.*)/gm, '')\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\nconst projectVars = $('Set Project Variables').item.json;\n\nreturn [{\n  json: {\n    ...projectVars,\n    fullOutput: fullText,\n    scriptText: scriptText,\n    voiceoverText: voiceoverText,\n    hookVariants: hookVarsMatch ? hookVarsMatch[0].trim() : '',\n    thumbnailConcept: thumbMatch ? thumbMatch[0].trim() : '',\n    visualPromptsTable: promptsMatch ? promptsMatch[0].trim() : '',\n    chapterMarkers: chaptersMatch ? chaptersMatch[0].trim() : '',\n    characterCount: voiceoverText.length,\n    estimatedMinutes: Math.round(voiceoverText.split(' ').length / 140)\n  }\n}];"
+      },
+      "id": "node-05-parse-script",
+      "name": "Parse Script Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{ \"cat > \\\"\" + $json.projectDir + \"/scripts/full_output.md\\\" << 'RUINS_EOF'\\n\" + $json.fullOutput + \"\\nRUINS_EOF\\necho \\\"Script saved.\\\"\" }}"
+      },
+      "id": "node-06-save-script",
+      "name": "Save Script to File",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Ruins Untold — Script Review",
+        "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**ESTIMATED LENGTH:** ~' + $json.estimatedMinutes + ' minutes\\n\\n**SCRIPT PREVIEW (first 3000 chars):**\\n```\\n' + ($json.scriptText || '').substring(0, 3000) + '\\n```\\n\\n**Full script saved at:** `' + $json.projectDir + '/scripts/full_output.md`\\n\\nReview the full script before approving.' }}",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "approve"
+                  },
+                  {
+                    "option": "revise"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Revision Notes",
+              "fieldType": "textarea",
+              "placeholder": "What needs to change? (only required if selecting 'revise')"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-07-script-review",
+      "name": "Script Review & Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        304
+      ],
+      "webhookId": "ruins-script-review"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-script",
+              "leftValue": "={{ $json.Decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-08-script-if",
+      "name": "Script Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'claude-opus-4-7', max_tokens: 16000, system: 'You are revising a Ruins Untold YouTube script. Apply the same style guide as before. Incorporate the specific revision feedback provided. Keep all approved sections intact.', messages: [{ role: 'user', content: 'ORIGINAL SCRIPT:\\n' + $json.scriptText + '\\n\\nREVISION FEEDBACK: ' + $json['Revision Notes'] + '\\n\\nPlease revise the script incorporating this feedback while maintaining all Ruins Untold style guidelines. Output the complete revised script, hook variants, thumbnail concept, visual prompts table, and chapter markers.' }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "node-09-revise-script",
+      "name": "Revise Script — Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1920,
+        512
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mkdg6co1DLJ0gHMk",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json;\nconst fullText = response.content[0].text;\n\nconst scriptMatch = fullText.match(/(?:#{1,2}\\s*SCRIPT|1\\.\\s*SCRIPT)[\\s\\S]*?(?=(?:#{1,2}\\s*HOOK VARIANTS|2\\.\\s*HOOK)|$)/i);\nconst promptsMatch = fullText.match(/(?:#{1,2}\\s*VISUAL PROMPTS?|4\\.\\s*VISUAL)[\\s\\S]*?(?=(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)|$)/i);\nconst chaptersMatch = fullText.match(/(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)[\\s\\S]*$/i);\nconst thumbMatch = fullText.match(/(?:#{1,2}\\s*THUMBNAIL|3\\.\\s*THUMB)[\\s\\S]*?(?=(?:#{1,2}\\s*VISUAL|4\\.)|$)/i);\n\nconst scriptText = scriptMatch ? scriptMatch[0].trim() : fullText;\nconst voiceoverText = scriptText\n  .replace(/\\[.*?\\]/g, '').replace(/\\(.*?\\)/g, '')\n  .replace(/^\\s*(#{1,3}.*|[A-Z\\s]+:.*|\\d+:\\d+.*|---.*)/gm, '')\n  .replace(/\\n{3,}/g, '\\n\\n').trim();\n\nconst prevVars = $('Set Project Variables').item.json;\n\nreturn [{ json: {\n  ...prevVars,\n  fullOutput: fullText,\n  scriptText,\n  voiceoverText,\n  visualPromptsTable: promptsMatch ? promptsMatch[0].trim() : '',\n  chapterMarkers: chaptersMatch ? chaptersMatch[0].trim() : '',\n  thumbnailConcept: thumbMatch ? thumbMatch[0].trim() : '',\n  characterCount: voiceoverText.length,\n  estimatedMinutes: Math.round(voiceoverText.split(' ').length / 140)\n}}];"
+      },
+      "id": "node-10-parse-revised",
+      "name": "Parse Revised Script",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{ \"cat > \\\"\" + $json.projectDir + \"/scripts/full_output.md\\\" << 'RUINS_EOF'\\n\" + $json.fullOutput + \"\\nRUINS_EOF\\necho \\\"Revised script saved.\\\"\" }}"
+      },
+      "id": "node-11-save-revised-script",
+      "name": "Save Revised Script",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.elevenlabs.io/v1/text-to-speech/{{ $json.VOICE_ID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "accept",
+              "value": "audio/mpeg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ text: $json.voiceoverText, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.35, use_speaker_boost: true } }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 300000
+        }
+      },
+      "id": "node-12-elevenlabs-tts",
+      "name": "Generate Voiceover — ElevenLabs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1920,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "elevenlabs-api-key",
+          "name": "ElevenLabs API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $json.projectDir }}/audio/voiceover.mp3",
+        "options": {}
+      },
+      "id": "node-13-save-voiceover",
+      "name": "Save Voiceover File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Ruins Untold — Voiceover Review",
+        "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**Voiceover file saved at:**\\n`' + $json.projectDir + '/audio/voiceover.mp3`\\n\\nPlease listen to the voiceover before approving. Open the file in any audio player.\\n\\n**Estimated duration:** ~' + $json.estimatedMinutes + ' minutes' }}",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "approve"
+                  },
+                  {
+                    "option": "regenerate"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Regeneration Notes",
+              "fieldType": "textarea",
+              "placeholder": "Any issues with pacing, pronunciation, or delivery? (only if regenerating)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-14-voiceover-review",
+      "name": "Voiceover Review & Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        304
+      ],
+      "webhookId": "ruins-voiceover-review"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-vo",
+              "leftValue": "={{ $json.Decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-15-voiceover-if",
+      "name": "Voiceover Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'claude-opus-4-7', max_tokens: 8000, system: 'You are a video post-production supervisor for Ruins Untold YouTube channel. Analyze scripts and identify precise placement cues for visual media, background music, and sound effects. Output structured JSON only.', messages: [{ role: 'user', content: 'Analyze this script and identify where images, video clips, background music, and sound effects should be placed. For each cue output a JSON array with objects: {type: \"image\"|\"video\"|\"music\"|\"sfx\", timestamp: \"MM:SS\", duration_seconds: N, description: \"...\", mood: \"...\", script_line: \"first few words of line\"}.\\n\\nRules:\\n- Images: for slower, static moments or evidence presentation\\n- Videos: for dramatic reveals, establishing shots, action sequences\\n- Music: background scoring (note: underscore, peak, outro)\\n- SFX: punctuation sounds (wind, impact, rumble, breath)\\n\\nSCRIPT:\\n' + $json.scriptText }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "node-16-claude-analyze",
+      "name": "Analyze Media Placement — Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2880,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mkdg6co1DLJ0gHMk",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ model: 'claude-opus-4-7', max_tokens: 16000, system: 'You generate structured asset prompt arrays for a YouTube documentary production pipeline. Output only valid JSON arrays, no markdown.', messages: [{ role: 'user', content: 'Based on this visual prompts table and placement analysis, generate four JSON arrays:\\n\\n1. IMAGE_PROMPTS: array of {index: N, timestamp: \"MM:SS\", nb2_prompt: {12-field NB2 JSON}, filename: \"img_NNNN.png\"}\\n   NB2 locked fields: style:\"Photorealistic, cinematic, 8K\", color_palette:[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"], lighting:\"golden hour sidelighting or deep chiaroscuro shadow\", mood:\"ancient, mysterious, slightly ominous\", negative_constraints:[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]\\n\\n2. VIDEO_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: 8, veo_prompt: \"[Cinematography]+[Subject]+[Action]+[Context]+[Style] 100-150 words with Dialogue: SFX: Ambient: audio layers\", filename: \"vid_NNNN.mp4\"}\\n\\n3. MUSIC_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: N, type: \"underscore\"|\"peak\"|\"outro\", prompt: \"ElevenLabs sound generation prompt for cinematic background music\", filename: \"music_NN.mp3\"}\\n\\n4. SFX_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: N, prompt: \"ElevenLabs sound generation prompt for sound effect\", filename: \"sfx_NN.mp3\"}\\n\\nVISUAL PROMPTS TABLE:\\n' + $json.visualPromptsTable + '\\n\\nPLACEMENT ANALYSIS:\\n' + $('Analyze Media Placement — Claude').item.json.content[0].text }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "node-17-claude-prompts",
+      "name": "Generate Asset Prompts — Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3120,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mkdg6co1DLJ0gHMk",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json;\nconst rawText = response.content[0].text;\n\nlet imagePrompts = [], videoPrompts = [], musicPrompts = [], sfxPrompts = [];\n\ntry {\n  const imgMatch = rawText.match(/IMAGE_PROMPTS[^\\[]*([\\s\\S]*?)(?=VIDEO_PROMPTS|$)/i);\n  const vidMatch = rawText.match(/VIDEO_PROMPTS[^\\[]*([\\s\\S]*?)(?=MUSIC_PROMPTS|$)/i);\n  const musMatch = rawText.match(/MUSIC_PROMPTS[^\\[]*([\\s\\S]*?)(?=SFX_PROMPTS|$)/i);\n  const sfxMatch = rawText.match(/SFX_PROMPTS[^\\[]*([\\s\\S]*?)(?=\\n\\n[A-Z]|$)/i);\n\n  const extractArray = (match) => {\n    if (!match) return [];\n    const arrMatch = match[0].match(/\\[[\\s\\S]*\\]/);\n    if (!arrMatch) return [];\n    try { return JSON.parse(arrMatch[0]); } catch(e) { return []; }\n  };\n\n  imagePrompts = extractArray(imgMatch);\n  videoPrompts = extractArray(vidMatch);\n  musicPrompts = extractArray(musMatch);\n  sfxPrompts = extractArray(sfxMatch);\n} catch(e) {\n  console.error('Prompt parse error:', e.message);\n}\n\nconst prevData = $('Parse Script Response').item.json;\n\nreturn [{ json: {\n  ...prevData,\n  imagePrompts,\n  videoPrompts,\n  musicPrompts,\n  sfxPrompts,\n  rawPromptsOutput: rawText,\n  imageTotalCount: imagePrompts.length,\n  videoTotalCount: videoPrompts.length,\n  musicTotalCount: musicPrompts.length,\n  sfxTotalCount: sfxPrompts.length\n}}];"
+      },
+      "id": "node-18-parse-prompts",
+      "name": "Parse Asset Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{ \"cat > \\\"\" + $json.projectDir + \"/scripts/asset_prompts.json\\\" << 'RUINS_EOF'\\n\" + $json.rawPromptsOutput + \"\\nRUINS_EOF\\necho \\\"Prompts saved: \" + $json.imageTotalCount + \" images, \" + $json.videoTotalCount + \" videos, \" + $json.musicTotalCount + \" music, \" + $json.sfxTotalCount + \" sfx\\\"\" }}"
+      },
+      "id": "node-19-save-prompts",
+      "name": "Save Prompts File",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3600,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Ruins Untold — Asset Prompts Review",
+        "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**Asset counts ready for generation:**\\n- Images (NanoBanana 2): ' + $json.imageTotalCount + '\\n- Videos (Veo 3.1 Fast): ' + $json.videoTotalCount + '\\n- Music cues (ElevenLabs): ' + $json.musicTotalCount + '\\n- SFX cues (ElevenLabs): ' + $json.sfxTotalCount + '\\n\\n**All prompts saved at:**\\n`' + $json.projectDir + '/scripts/asset_prompts.json`\\n\\nReview the prompts file before approving generation. This step commits to API costs.' }}",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "approve — begin generation"
+                  },
+                  {
+                    "option": "revise prompts"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Revision Notes",
+              "fieldType": "textarea",
+              "placeholder": "Describe any prompt changes needed (only if revising)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-20-prompts-review",
+      "name": "Prompts Review & Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        3840,
+        304
+      ],
+      "webhookId": "ruins-prompts-review"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-prompts",
+              "leftValue": "={{ $json.Decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-21-prompts-if",
+      "name": "Prompts Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "node-32-split-music",
+      "name": "Split Music Prompts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4320,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/sound-generation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "accept",
+              "value": "audio/mpeg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ text: $json.prompt, duration_seconds: $json.duration_seconds || 30, prompt_influence: 0.5 }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "audioData"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "node-33-gen-music",
+      "name": "Generate Music — ElevenLabs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        4560,
+        608
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "elevenlabs-api-key",
+          "name": "ElevenLabs API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/music/{{ $json.filename }}",
+        "dataPropertyName": "audioData",
+        "options": {}
+      },
+      "id": "node-34-save-music",
+      "name": "Save Music File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        4800,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "node-35-split-sfx",
+      "name": "Split SFX Prompts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4320,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/sound-generation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "accept",
+              "value": "audio/mpeg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ text: $json.prompt, duration_seconds: $json.duration_seconds || 5, prompt_influence: 0.6 }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "audioData"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "node-36-gen-sfx",
+      "name": "Generate SFX — ElevenLabs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        4560,
+        800
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "elevenlabs-api-key",
+          "name": "ElevenLabs API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/sfx/{{ $json.filename }}",
+        "dataPropertyName": "audioData",
+        "options": {}
+      },
+      "id": "node-37-save-sfx",
+      "name": "Save SFX File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        4800,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "waitForAll",
+        "options": {}
+      },
+      "id": "node-38-merge-assets",
+      "name": "All Assets Complete",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        5040,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsedData = $('Parse Asset Prompts').item.json;\nconst projectDir = parsedData.projectDir;\n\nconst manifest = {\n  projectDir,\n  topic: parsedData.TOPIC,\n  voiceover: projectDir + '/audio/voiceover.mp3',\n  images: (parsedData.imagePrompts || []).map(p => ({\n    filename: projectDir + '/images/' + p.filename,\n    timestamp: p.timestamp,\n    duration: 8\n  })),\n  videos: (parsedData.videoPrompts || []).map(p => ({\n    filename: projectDir + '/videos/' + p.filename,\n    timestamp: p.timestamp,\n    duration: p.duration_seconds || 8\n  })),\n  music: (parsedData.musicPrompts || []).map(p => ({\n    filename: projectDir + '/music/' + p.filename,\n    timestamp: p.timestamp,\n    duration: p.duration_seconds || 30,\n    type: p.type\n  })),\n  sfx: (parsedData.sfxPrompts || []).map(p => ({\n    filename: projectDir + '/sfx/' + p.filename,\n    timestamp: p.timestamp,\n    duration: p.duration_seconds || 5\n  }))\n};\n\nreturn [{ json: { manifest, projectDir, TOPIC: parsedData.TOPIC } }];"
+      },
+      "id": "node-39-build-manifest",
+      "name": "Build Asset Manifest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5280,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Ruins Untold — Final Assets Review",
+        "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**Generated assets are in:** `' + $json.projectDir + '`\\n\\n**Asset summary:**\\n- Images: `' + $json.projectDir + '/images/`\\n- Videos: `' + $json.projectDir + '/videos/`\\n- Music: `' + $json.projectDir + '/music/`\\n- SFX: `' + $json.projectDir + '/sfx/`\\n- Voiceover: `' + $json.projectDir + '/audio/voiceover.mp3`\\n\\nReview all assets before approving FFMpeg assembly. Assembly is the final step.' }}",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "approve — assemble final video"
+                  },
+                  {
+                    "option": "hold — do not assemble"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "placeholder": "Any notes for post-production..."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-40-assets-review",
+      "name": "Assets Review & Final Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        5520,
+        512
+      ],
+      "webhookId": "ruins-assets-review"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-assets",
+              "leftValue": "={{ $json.Decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-41-assets-if",
+      "name": "Assets Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        5760,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { manifest, projectDir } = $input.item.json;\n\nconst slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 40);\nconst outputFile = `/Users/jneal/Antigravity/out/${slugify(manifest.topic)}_final.mp4`;\nconst concatFile = `${projectDir}/scripts/video_concat.txt`;\nconst musicMixFile = `${projectDir}/scripts/music_concat.txt`;\n\n// Build concat list from videos and images sorted by timestamp\nconst allVisuals = [\n  ...manifest.images.map(i => ({ ...i, mediaType: 'image' })),\n  ...manifest.videos.map(v => ({ ...v, mediaType: 'video' }))\n].sort((a, b) => {\n  const toSec = t => { const [m,s] = (t||'0:00').split(':'); return parseInt(m)*60+parseInt(s); };\n  return toSec(a.timestamp) - toSec(b.timestamp);\n});\n\nconst concatLines = allVisuals.map(v => {\n  if (v.mediaType === 'image') {\n    return `file '${v.filename}'\\nduration ${v.duration || 8}`;\n  } else {\n    return `file '${v.filename}'`;\n  }\n}).join('\\n');\n\n// Music concat\nconst musicLines = manifest.music.map(m => `file '${m.filename}'\\nduration ${m.duration}`).join('\\n');\n\n// Build SFX filter inputs\nconst sfxInputs = manifest.sfx.map((s, i) => `-i \"${s.filename}\"`).join(' ');\nconst sfxMixParts = manifest.sfx.map((_, i) => `[${i + 3}:a]`).join('');\nconst totalAudioInputs = manifest.sfx.length + 3;\nconst sfxMixFilter = manifest.sfx.length > 0\n  ? `;${sfxMixParts}amix=inputs=${manifest.sfx.length}[sfxmix];[2:a][sfxmix]amix=inputs=2:weights=1 0.15[bgmix];[1:a][bgmix]amix=inputs=2:weights=1 0.25[aout]`\n  : ';[1:a][2:a]amix=inputs=2:weights=1 0.20[aout]';\n\nconst ffmpegCmd = `#!/bin/bash\nset -e\n\nPROJECT_DIR=\"${projectDir}\"\nOUTPUT=\"${outputFile}\"\n\n# Write concat file for visuals\ncat > \"${concatFile}\" << 'CONCAT_EOF'\n${concatLines}\nCONCAT_EOF\n\n# Write music concat\ncat > \"${musicMixFile}\" << 'MUSIC_EOF'\n${musicLines}\nMUSIC_EOF\n\n# Assemble music track\nffmpeg -y -f concat -safe 0 -i \"${musicMixFile}\" -c:a libmp3lame -q:a 4 \"${projectDir}/audio/music_combined.mp3\"\n\n# Final assembly: visuals + voiceover + music + sfx\nffmpeg -y \\\\\n  -f concat -safe 0 -i \"${concatFile}\" \\\\\n  -i \"${manifest.voiceover}\" \\\\\n  -i \"${projectDir}/audio/music_combined.mp3\" \\\\\n  ${sfxInputs} \\\\\n  -filter_complex \"[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30[vout]${sfxMixFilter}\" \\\\\n  -map \"[vout]\" -map \"[aout]\" \\\\\n  -c:v libx264 -crf 18 -preset slow -profile:v high \\\\\n  -c:a aac -b:a 192k -ar 48000 \\\\\n  -movflags +faststart \\\\\n  -t $(ffprobe -v quiet -show_entries format=duration -of csv=p=0 \"${manifest.voiceover}\") \\\\\n  \"$OUTPUT\"\n\necho \"Assembly complete: $OUTPUT\"\n`;\n\nreturn [{ json: { ffmpegScript: ffmpegCmd, outputFile, scriptPath: `${projectDir}/scripts/assemble.sh`, projectDir, TOPIC: manifest.topic } }];"
+      },
+      "id": "node-42-ffmpeg-script",
+      "name": "Generate FFMpeg Assembly Script",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6000,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{ \"cat > \\\"\" + $json.scriptPath + \"\\\" << 'RUINS_EOF'\\n\" + $json.ffmpegScript + \"\\nRUINS_EOF\\nchmod +x \\\"\" + $json.scriptPath + \"\\\"\\necho \\\"Assembly script written to: \" + $json.scriptPath + \"\\\"\" }}"
+      },
+      "id": "node-43-write-ffmpeg",
+      "name": "Write Assembly Script",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        6240,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{ \"bash \\\"\" + $json.scriptPath + \"\\\" 2>&1\" }}"
+      },
+      "id": "node-44-run-ffmpeg",
+      "name": "Assemble Final Video — FFMpeg",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        6480,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "node-45-done",
+      "name": "Production Complete",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        6720,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.item.json;\nconst prompts = d.imagePrompts || [];\nreturn prompts.map((p, i) => {\n  const rowNum = i + 1;\n  const promptJson = typeof p.nb2_prompt === 'object'\n    ? JSON.stringify(p.nb2_prompt)\n    : (p.nb2_prompt || '');\n  return {\n    json: {\n      'Index':    rowNum,\n      'Type':     'Image',\n      'Prompt':   '\"' + promptJson + '\"',\n      'Filename': 'image_' + String(rowNum).padStart(4, '0')\n    }\n  };\n});"
+      },
+      "id": "node-22-expand-images",
+      "name": "Expand Image Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsedData = $('Parse Asset Prompts').item.json;\nconst prompts = parsedData.videoPrompts || [];\nreturn prompts.map((p, i) => {\n  const rowNum = i + 1;\n  const promptText = p.veo_prompt || '';\n  return {\n    json: {\n      'Index':    rowNum,\n      'Type':     'Video',\n      'Prompt':   '\"' + promptText + '\"',\n      'Filename': 'video_' + String(rowNum).padStart(4, '0')\n    }\n  };\n});"
+      },
+      "id": "node-24-expand-videos",
+      "name": "Expand Video Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5040,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.item.json;\nconst prompts = d.musicPrompts || [];\nreturn prompts.map(p => ({ json: { ...p, projectDir: d.projectDir } }));"
+      },
+      "id": "node-26-expand-music",
+      "name": "Expand Music Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.item.json;\nconst prompts = d.sfxPrompts || [];\nreturn prompts.map(p => ({ json: { ...p, projectDir: d.projectDir } }));"
+      },
+      "id": "node-27-expand-sfx",
+      "name": "Expand SFX Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Ruins Untold — Manual Generation Ready?",
+        "formDescription": "={{ '**Prompt files written to project folder:**\\n\\n📄 `' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/image_prompts.xlsx`\\n📄 `' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/video_prompts.xlsx`\\n\\n**Generate your images and videos using those prompts, then place the files here:**\\n\\n🖼️  Images → `' + $('Parse Asset Prompts').item.json.projectDir + '/images/` (filenames: img_0001.png, img_0002.png…)\\n🎬  Videos → `' + $('Parse Asset Prompts').item.json.projectDir + '/videos/` (filenames: vid_0001.mp4, vid_0002.mp4…)\\n\\n**Music and SFX are being auto-generated in parallel** — wait for this form to appear before submitting, as that confirms both audio tracks are ready.\\n\\nSubmit once all image and video files are in place.' }}",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Confirmation",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "All files are in place — proceed to assembly"
+                  },
+                  {
+                    "option": "Not ready yet — cancel"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "placeholder": "Any files skipped or renamed?"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-38b-manual-wait",
+      "name": "Wait — Manual Image & Video Generation",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        5760,
+        304
+      ],
+      "webhookId": "ruins-manual-generation-wait"
+    },
+    {
+      "parameters": {
+        "operation": "toFile",
+        "fileFormat": "xlsx",
+        "options": {
+          "fileName": "image_prompts",
+          "headerRow": true,
+          "sheetName": "Image Prompts"
+        }
+      },
+      "id": "node-23-xlsx-images",
+      "name": "Write Image Prompts — XLSX",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        4560,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/scripts/image_prompts.xlsx",
+        "options": {}
+      },
+      "id": "node-23b-save-image-xlsx",
+      "name": "Save Image Prompts File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        4800,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toFile",
+        "fileFormat": "xlsx",
+        "options": {
+          "fileName": "video_prompts",
+          "headerRow": true,
+          "sheetName": "Video Prompts"
+        }
+      },
+      "id": "node-25-xlsx-videos",
+      "name": "Write Video Prompts — XLSX",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        5280,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/scripts/video_prompts.xlsx",
+        "options": {}
+      },
+      "id": "node-25b-save-video-xlsx",
+      "name": "Save Video Prompts File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        5520,
+        144
+      ]
+    }
+  ],
+  "connections": {
+    "Set Project Variables": {
+      "main": [
+        [
+          {
+            "node": "Create Project Directories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Project Directories": {
+      "main": [
+        [
+          {
+            "node": "Generate Script — Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Script — Claude": {
+      "main": [
+        [
+          {
+            "node": "Parse Script Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Script Response": {
+      "main": [
+        [
+          {
+            "node": "Save Script to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Script to File": {
+      "main": [
+        [
+          {
+            "node": "Script Review & Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Script Review & Approval": {
+      "main": [
+        [
+          {
+            "node": "Script Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Script Approved?": {
+      "main": [
+        [
+          {
+            "node": "Generate Voiceover — ElevenLabs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Revise Script — Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revise Script — Claude": {
+      "main": [
+        [
+          {
+            "node": "Parse Revised Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Revised Script": {
+      "main": [
+        [
+          {
+            "node": "Save Revised Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Revised Script": {
+      "main": [
+        [
+          {
+            "node": "Script Review & Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Voiceover — ElevenLabs": {
+      "main": [
+        [
+          {
+            "node": "Save Voiceover File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Voiceover File": {
+      "main": [
+        [
+          {
+            "node": "Voiceover Review & Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voiceover Review & Approval": {
+      "main": [
+        [
+          {
+            "node": "Voiceover Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voiceover Approved?": {
+      "main": [
+        [
+          {
+            "node": "Analyze Media Placement — Claude",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Voiceover — ElevenLabs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Media Placement — Claude": {
+      "main": [
+        [
+          {
+            "node": "Generate Asset Prompts — Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Asset Prompts — Claude": {
+      "main": [
+        [
+          {
+            "node": "Parse Asset Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Asset Prompts": {
+      "main": [
+        [
+          {
+            "node": "Save Prompts File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Prompts File": {
+      "main": [
+        [
+          {
+            "node": "Prompts Review & Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompts Review & Approval": {
+      "main": [
+        [
+          {
+            "node": "Prompts Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompts Approved?": {
+      "main": [
+        [
+          {
+            "node": "Expand Image Prompts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Expand Music Prompts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Expand SFX Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Asset Prompts — Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Music Prompts": {
+      "main": [
+        [
+          {
+            "node": "Generate Music — ElevenLabs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "All Assets Complete",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Generate Music — ElevenLabs": {
+      "main": [
+        [
+          {
+            "node": "Save Music File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Music File": {
+      "main": [
+        [
+          {
+            "node": "Split Music Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split SFX Prompts": {
+      "main": [
+        [
+          {
+            "node": "Generate SFX — ElevenLabs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "All Assets Complete",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Generate SFX — ElevenLabs": {
+      "main": [
+        [
+          {
+            "node": "Save SFX File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save SFX File": {
+      "main": [
+        [
+          {
+            "node": "Split SFX Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Assets Complete": {
+      "main": [
+        [
+          {
+            "node": "Wait — Manual Image & Video Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Asset Manifest": {
+      "main": [
+        [
+          {
+            "node": "Assets Review & Final Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assets Review & Final Approval": {
+      "main": [
+        [
+          {
+            "node": "Assets Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assets Approved?": {
+      "main": [
+        [
+          {
+            "node": "Generate FFMpeg Assembly Script",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Generate FFMpeg Assembly Script": {
+      "main": [
+        [
+          {
+            "node": "Write Assembly Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Assembly Script": {
+      "main": [
+        [
+          {
+            "node": "Assemble Final Video — FFMpeg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Final Video — FFMpeg": {
+      "main": [
+        [
+          {
+            "node": "Production Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Image Prompts": {
+      "main": [
+        [
+          {
+            "node": "Write Image Prompts — XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Video Prompts": {
+      "main": [
+        [
+          {
+            "node": "Write Video Prompts — XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Music Prompts": {
+      "main": [
+        [
+          {
+            "node": "Split Music Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand SFX Prompts": {
+      "main": [
+        [
+          {
+            "node": "Split SFX Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Manual Image & Video Generation": {
+      "main": [
+        [
+          {
+            "node": "Build Asset Manifest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Image Prompts — XLSX": {
+      "main": [
+        [
+          {
+            "node": "Save Image Prompts File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Image Prompts File": {
+      "main": [
+        [
+          {
+            "node": "Expand Video Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Video Prompts — XLSX": {
+      "main": [
+        [
+          {
+            "node": "Save Video Prompts File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Video Prompts File": {
+      "main": [
+        [
+          {
+            "node": "All Assets Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Ruins Untold Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Ruins Untold Ideas": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Topics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Topics": {
+      "main": [
+        [
+          {
+            "node": "Select Episode Topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Episode Topic": {
+      "main": [
+        [
+          {
+            "node": "Look Up Selected Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Look Up Selected Row": {
+      "main": [
+        [
+          {
+            "node": "Set Project Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "ruins-untold"
+  },
+  "pinData": {
+    "Generate Script — Claude": [
+      {
+        "json": {
+          "model": "claude-opus-4-7",
+          "id": "msg_01FnbYLceszVdjKEYnopZHwm",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "# RUINS UNTOLD\n## EPISODE: The Antikythera Mechanism — The Device That Shouldn't Exist\n\n---\n\n## 1. SCRIPT\n\n---\n\n**[HOOK — 0:00–0:45]**\n\nIn 1901, sponge divers off a Greek island pulled a corroded lump of bronze out of a shipwreck...\n\nIt sat in a museum drawer for fifty years. Nobody knew what it was.\n\nWhen they finally X-rayed it, they found something that, according to everything we know about ancient technology, simply should not exist...\n\nA working astronomical computer. Thirty-seven precision gears. Manufactured to a tolerance of less than five-hundredths of a millimeter. Built sometime before 70 BCE.\n\nAnd here is the part nobody likes to talk about...\n\nNothing remotely like it appears in the historical record for the next fourteen hundred years.\n\nWelcome to Ruins Untold. Come with me as we explore this together.\n\n---\n\n**[CONTEXT BRIDGE — 0:45–2:30]**\n\nLet us start with what we actually have.\n\nThe object is roughly the size of a shoebox. Wooden casing, long since rotted. Bronze gears inside, fused together by two thousand years of seawater. When it was recovered from the wreck in October 1900, it looked like a green rock.\n\nThe shipwreck itself is dated to around 70 to 60 BCE. The cargo was Roman. Bound, most likely, from somewhere in the eastern Mediterranean toward Italy. Statues. Coins. Glassware. The usual luxury goods of a wealthy trader.\n\nAnd then... this.\n\nThe mainstream position is straightforward. The Antikythera Mechanism is a Hellenistic Greek invention. Probably built in Rhodes, possibly Corinth. It represents the pinnacle of ancient Greek engineering. A one-of-a-kind device, brilliant but isolated. A \"singular achievement,\" as the academic literature phrases it.\n\nThat is the official answer.\n\nIt is also, if you look closely, not really an answer at all. It is a description of a problem dressed up as a solution.\n\nBecause \"singular achievement\" is what scholars say when they cannot explain where something came from... and they cannot explain why nothing like it ever appears again.\n\n---\n\n**[ACT 1 — THE OFFICIAL STORY — 2:30–6:00]**\n\nLet us be fair to the consensus. There is a real case to be made.\n\nGreek astronomy in the second and first centuries BCE was sophisticated. Hipparchus had calculated the precession of the equinoxes. Eratosthenes had measured the circumference of the Earth to within a few percent. The mathematical knowledge required to model lunar and solar cycles existed.\n\nSo the argument goes... if the math existed, why not the machine?\n\nTony Freeth, the UCL mathematician who has spent more than twenty years reconstructing the device, has shown that the gear ratios encode the Metonic cycle — the nineteen-year period after which lunar phases repeat on the same calendar dates. They encode the Saros cycle, used to predict eclipses. They model the irregular motion of the moon across the sky using something called epicyclic gearing... gears mounted on other gears, mimicking the wobble of celestial bodies.\n\nThis is not a clock. This is an analog computer.\n\nThe mainstream model says: Greek astronomers wanted a teaching tool, or perhaps a luxury commission for a wealthy patron. A skilled bronzesmith, working under their direction, built it. Perhaps several were built. Only one survived because it ended up underwater, sealed away from oxygen and looting.\n\nIt is a clean story. Self-contained. Reasonable.\n\nAnd then you start looking at the actual physical object...\n\n**[PATTERN INTERRUPT — ~5:00]**\n\nHere is the thing that stopped me cold when I first read the 2021 UCL paper.\n\nTo manufacture the smallest gears in the mechanism — and there are some with teeth less than a millimeter apart — you need machining tolerances under 0.05 millimeters. That is fifty microns. The width of a human hair.\n\nWe are told this was made by a bronzesmith. By hand. With Iron Age tools.\n\nThat claim deserves scrutiny.\n\n---\n\n**[ACT 2 — THE ANOMALIES — 6:00–12:00]**\n\nLet me lay out what bothers me. Not in a vague way. Specifically.\n\n**Anomaly one. The precision.**\n\nThe gear teeth are not stamped. They are individually cut. Each one. And they are cut accurately enough that the entire 37-gear train meshes and runs. If any single tooth were off by more than a fraction of a degree, the whole calculation collapses. The cumulative error across the gear train would be catastrophic within a few rotations.\n\nMainstream explanation: a master craftsman, working slowly, achieved this by hand.\n\nWhy this is insufficient: hand-cut gearing of this complexity does not appear anywhere else in the archaeological record of the ancient world. Not in Greek workshops. Not in Roman ones. Not in Egyptian, Persian, or Chinese contexts of the same period. We have thousands of bronze artifacts from this era. We have zero precursors to this technology. Zero prototypes. Zero failed attempts.\n\nWe will come back to what this means.\n\n**Anomaly two. The calendar dialect.**\n\nThe inscriptions on the dials are in Greek. But the month names are not Athenian. They are Corinthian — specifically a Corinthian calendar used in colonies in northwestern Greece and in Syracuse, in Sicily.\n\nThis matters because Syracuse is where Archimedes worked.\n\nArchimedes... who, according to ancient sources, built mechanical devices that modeled the heavens. Devices that Cicero, more than a century later, claimed to have personally seen. Cicero describes a bronze sphere built by Archimedes that demonstrated the motions of the sun, moon, and planets.\n\nThat device has never been found.\n\nWe will come back to that too.\n\n**[PATTERN INTERRUPT — ~8:30 — change angle]**\n\nLet us shift the angle for a moment.\n\nForget the device itself. Ask a different question.\n\nWhat kind of civilization produces a machine like this?\n\nBecause in our experience — in everything we know about technological development — complex precision instruments do not appear in isolation. They emerge from a chain. A culture of clockmakers produces clocks. A culture of clockmakers produces other clockmakers, and tools to make clocks, and apprentices who improve on the design, and competitors who copy it.\n\nThe Antikythera Mechanism has no chain. No lineage. No descendants.\n\nIt is, archaeologically speaking, an orphan.\n\n**Anomaly three. The fourteen-hundred-year gap.**\n\nAfter the Antikythera Mechanism is built, geared astronomical computers do not reappear in the European record until roughly the fourteenth century CE. Richard of Wallingford's astronomical clock at St. Albans Abbey, completed around 1336, is the next thing in the same conceptual family.\n\nFourteen hundred years.\n\nThe Romans inherited Greek scholarship. The Byzantines preserved it. The Islamic world expanded it. And yet... no one, anywhere, builds another machine like this for over a millennium.\n\nMainstream explanation: the knowledge was lost. Skilled craftsmen died without passing on their techniques. Manuscripts perished.\n\nWhy this is insufficient: knowledge of this caliber, embedded in a working physical object that other civilizations had access to, does not simply evaporate. The Romans had Greek engineers. The Byzantines had Greek libraries. Someone, somewhere, in fourteen centuries, should have built another one.\n\nNobody did.\n\n**[PATTERN INTERRUPT — ~11:00 — emotional peak]**\n\nHere is where it gets uncomfortable.\n\nWe are not looking at a story of progress. We are looking at a story of regression.\n\nA device exists in 70 BCE that nobody on Earth can replicate again until the Renaissance. That is not how technology is supposed to work. Technology accumulates. It builds on itself. Except, apparently, in this case... it didn't.\n\nWhich forces a question the mainstream really does not want to answer.\n\nWhat if the Antikythera Mechanism is not the peak of Greek engineering... but the last surviving fragment of something older?\n\n---\n\n**[ACT 3 — THE ALTERNATIVE INTERPRETATION — 12:00–17:30]**\n\nThere is a different way to read this evidence. It is not the consensus view. But it accounts for the anomalies in a way the consensus does not.\n\nResearchers like Graham Hancock and Randall Carlson have argued for years that the conventional timeline of human civilization is incomplete. That there is evidence — geological, architectural, mythological — pointing to advanced knowledge predating the standard Bronze Age origin story by thousands of years.\n\nWithin that framework, the Antikythera Mechanism stops being an anomaly. It becomes a survival.\n\nConsider the model. A civilization, or a network of civilizations, possesses sophisticated astronomical and mechanical knowledge well before the conventional date for the rise of complex society. Something happens — climatic disruption, cataclysm, the Younger Dryas event that James Kennett, Allen West, and Christopher Moore have documented in the geological record — and that civilization collapses. Most of its knowledge is lost. But fragments survive. Passed down through priesthoods, scholarly lineages, mystery traditions. Imperfectly understood by their inheritors.\n\nArchimedes, in this reading, was not the inventor of mechanical astronomy. He was a late practitioner of an older tradition. The Antikythera Mechanism was not a singular Greek achievement. It was the last well-made example of a craft that had been slowly dying for centuries.\n\nThis explains the absence of precursors. The precursors existed, but earlier — and they have not been found, or they have been found and misclassified, or they were made of materials that did not survive.\n\nIt explains the fourteen-hundred-year gap. The knowledge did not exist independently in Greek workshops. It existed in a specific transmission lineage. When that lineage died, the knowledge died with it. Cicero's description of Archimedes' sphere becomes important here. Cicero saw it. Touched it. He was not describing a legend. He was describing a physical object that, two thousand years later, has vanished without a trace.\n\nHow many other devices like this existed? How many were melted down for their bronze during the collapse of the Western Empire? How many sit, right now, corroded beyond recognition, in museum drawers labeled \"unidentified metal artifact\"?\n\nWe have one. We have one because a ship sank, and the seafloor preserved what the land would not.\n\n**[PATTERN INTERRUPT — ~14:30 — self-aware disclaimer]**\n\nLook, I know how this sounds.\n\nI am not telling you that Atlantis built the Antikythera Mechanism. I am not telling you anything as definitive as that. What I am telling you is that the mainstream explanation — \"singular achievement by an unknown genius, with no precursors and no successors, lost for fourteen hundred years\" — is not actually an explanation. It is a placeholder. It is what you say when you do not have an answer but cannot admit it.\n\nThe evidence points toward something. It points toward the existence of a technological tradition we have not adequately accounted for. Whether that tradition originated in Hellenistic Greece, or in something older that fed into it... that is the open question.\n\nAnd it is the question we are not supposed to ask.\n\nThere is a thread that runs through this — the same thread we explored in our episode on the Bronze Age Collapse. Civilizations regress. Knowledge is lost. Sometimes catastrophically, sometimes quietly. We treat history as a story of upward progress because that is the story that flatters us. But the physical record tells a different story. A messier one. One where peaks come early, and the climb back takes a very long time.\n\nThe Antikythera Mechanism is a data point on that curve.\n\n---\n\n**[RESOLUTION + CTA — 17:30–20:00]**\n\nSo let us pull this together.\n\nWe have a precision astronomical computer, manufactured to tolerances we would struggle to match by hand today, recovered from a shipwreck that sank around 60 BCE. It encodes calendar systems pointing toward Syracuse and the Archimedean tradition. It has no archaeological precursors. It has no successors for fourteen hundred years. The ancient written sources describe similar devices, all of which have been lost.\n\nThe mainstream calls it a singular achievement.\n\nI think the more honest description is: it is the only one we found.\n\nThe question is not whether the Antikythera Mechanism existed. We have it. It is sitting in the National Archaeological Museum in Athens. The question is why we are not allowed to ask what else existed alongside it... and what happened to the knowledge that made it possible.\n\nIf this episode gave you something to think about, subscribe to Ruins Untold. We are building a library of these questions, slowly and carefully, and we want you with us for the long haul. Drop a comment below — I read them — and tell me what you think the mechanism really was. A one-off luxury commission? Or the tip of something much larger?\n\nAnd if you want to follow this thread further, watch our episode on the Bronze Age Collapse next. The pattern we just discussed — peaks followed by long descents — shows up there in a way that should make all of us uncomfortable.\n\nNext time on Ruins Untold... we are going underwater. Off the coast of Japan, there is a structure called the Yonaguni Monument. Mainstream geology says it is natural. The evidence on the seafloor says something else entirely.\n\nUntil then... keep asking the questions we are not supposed to ask.\n\n---\n\n## 2. HOOK VARIANTS\n\n**VARIANT A — PARADOX FORMAT**\n\nTwo facts. Both established. Both impossible to reconcile.\n\nFact one: in 1901, divers recovered a bronze device from a Roman-era shipwreck containing thirty-seven interlocking precision gears, accurate enough to predict eclipses decades in advance.\n\nFact two: nothing remotely like this device appears anywhere in the archaeological record for the next fourteen hundred years.\n\nBoth of these things are true. And mainstream archaeology has no coherent explanation for how they can be true at the same time...\n\nWelcome to Ruins Untold. Come with me as we explore this together.\n\n---\n\n**VARIANT B — EVIDENCE FORMAT**\n\nThis is a photograph of a corroded lump of bronze, roughly the size of a shoebox. It was pulled out of the Aegean Sea in 1901. For fifty years, nobody knew what it was.\n\nWhen they finally X-rayed it... they found gears. Thirty-seven of them. Cut to tolerances under five-hundredths of a millimeter. Encoding the motions of the sun, the moon, and the planets.\n\nIt was built before 70 BCE.\n\nAnd according to everything we are told about ancient technology... it should not be possible.\n\nWelcome to Ruins Untold. Come with me as we explore this together.\n\n---\n\n## 3. THUMBNAIL CONCEPT\n\n**Image:** Extreme close-up, high-contrast macro photography of the actual corroded Antikythera Mechanism fragment on the left half of the frame — green-bronze patina, visible gear teeth catching dramatic sidelight. On the right half, a sharp, clean CGI render of the reconstructed bronze gear assembly glowing with warm ochre highlights against deep shadow. The two halves meet at a jagged seam down the center. Faint constellation lines and Greek numerals overlay the dark background.\n\n**Text overlay (top right, bold sans-serif, off-white):** \"BUILT IN 70 BCE.\"\n**Text overlay (bottom right, larger, warm orange):** \"HOW?\"\n**Small tag (lower left, red):** RUINS UNTOLD\n\n---\n\n## 4. VISUAL PROMPTS TABLE\n\n| Timestamp | Segment | Script Line | Visual Type | Image Prompt JSON | Video Prompt |\n|---|---|---|---|---|---|\n| 0:00–0:08 | Hook | \"In 1901, sponge divers off a Greek island...\" | Image | {\"subject\":\"Greek sponge diver in heavy brass diving helmet underwater holding a corroded bronze lump\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"underwater shafts of light from above, deep chiaroscuro shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"low angle, diver centered, debris swirling\",\"camera\":\"35mm anamorphic, shallow depth of field\",\"setting\":\"Aegean seafloor, scattered amphorae\",\"era\":\"early 20th century\",\"detail_level\":\"hyperdetailed bronze corrosion, bubbles\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 0:08–0:20 | Hook | \"It sat in a museum drawer for fifty years...\" | Video | — | Cinematography: slow dolly push into a dusty museum drawer. Subject: the corroded Antikythera fragment wrapped in old paper labels. Action: a gloved hand slowly pulls back the wrapping revealing the green-bronze object. Context: dim archive room, brass cabinet handles, 1950s aesthetic. Style & Ambiance: cinematic chiaroscuro, teal-orange grade, 8K photoreal. Dialogue: none. SFX: paper rustle, soft drawer slide, faint metallic clink. Ambient: low hum of fluorescent light, distant footsteps in marble hallway. |\n| 0:20–0:35 | Hook | \"Thirty-seven precision gears...\" | Image | {\"subject\":\"X-ray tomographic cross-section of the Antikythera Mechanism revealing 37 interlocking bronze gears\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"internal glow with deep chiaroscuro shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"perfectly symmetrical, gear train illuminated\",\"camera\":\"macro lens, perpendicular view\",\"setting\":\"dark void background\",\"era\":\"timeless scientific imaging\",\"detail_level\":\"hyperdetailed gear teeth, micron-level precision visible\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 0:35–0:45 | Hook | \"Welcome to Ruins Untold...\" | Video | — | Cinematography: slow orbital camera around the assembled mechanism. Subject: fully reconstructed bronze device on a stone pedestal. Action: gears turn slowly, casting interlocking shadows. Context: candlelit ancient workshop, scrolls and astrolabes in background. Style & Ambiance: warm ochre highlights, deep teal shadow, photoreal 8K. Dialogue: none. SFX: faint mechanical ticking, soft bronze whir. Ambient: distant Aegean wind, low subsonic drone. |\n| 0:45–1:10 | Context | \"The object is roughly the size of a shoebox...\" | Image | {\"subject\":\"Original Antikythera Mechanism main fragment displayed under museum glass with scale ruler\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"single spotlight, deep chiaroscuro shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"centered, slight overhead angle\",\"camera\":\"50mm prime, museum reverence\",\"setting\":\"National Archaeological Museum Athens\",\"era\":\"modern museum, ancient artifact\",\"detail_level\":\"every corrosion crack visible\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 1:10–1:35 | Context | \"The shipwreck itself is dated to around 70 to 60 BCE...\" | Image | {\"subject\":\"Roman merchant ship in storm, listing as cargo amphorae spill into the sea\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"lightning flash sidelighting, deep chiaroscuro\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"wide shot, dramatic diagonal\",\"camera\":\"35mm wide, dynamic angle\",\"setting\":\"Aegean Sea at night, rocky island silhouette\",\"era\":\"1st century BCE\",\"detail_level\":\"hyperdetailed rigging, wet wood, foam\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 1:35–2:00 | Context | \"Statues. Coins. Glassware...\" | Video | — | Cinematography: slow tracking shot across underwater debris field. Subject: scattered bronze statues, Roman amphorae, gold coins half-buried in silt. Action: gentle current stirs sediment, fish drift through frame. Context: 60 meters down, dim blue-green light. Style & Ambiance: teal-dominant grade with warm ochre highlights on bronze, photoreal 8K. Dialogue: none. SFX: muffled underwater currents, distant whale call. Ambient: deep ocean pressure rumble, faint bubble streams. |\n| 2:00–2:30 | Context | \"A 'singular achievement,' as the academic literature phrases it...\" | Image | {\"subject\":\"Open academic journal page showing the phrase 'singular achievement' highlighted, beside photo of mechanism\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"warm desk lamp sidelighting, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"overhead flat lay, slight angle\",\"camera\":\"macro, shallow DOF\",\"setting\":\"scholar's wooden desk, leather notebook\",\"era\":\"modern academic\",\"detail_level\":\"crisp typography, paper grain visible\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 2:30–3:00 | Act 1 | \"Greek astronomy in the second and first centuries BCE was sophisticated...\" | Image | {\"subject\":\"Hipparchus observing stars from a stone observatory with bronze astronomical instruments\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"moonlight and torchlight sidelighting\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"silhouette against starfield\",\"camera\":\"wide shot, low angle\",\"setting\":\"Rhodes hilltop observatory, 2nd century BCE\",\"era\":\"Hellenistic Greek\",\"detail_level\":\"detailed bronze armillary sphere\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 3:00–3:30 | Act 1 | \"Eratosthenes had measured the circumference of the Earth...\" | Image | {\"subject\":\"Eratosthenes with papyrus scroll and geometric diagrams in candlelit Alexandrian library\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"candle warm ochre highlights, deep chiaroscuro shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"three-quarter view, scholar bent over scroll\",\"camera\":\"50mm, intimate\",\"setting\":\"Library of Alexandria, scrolls on shelves\",\"era\":\"3rd century BCE\",\"detail_level\":\"hyperdetailed papyrus, ink calculations\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 3:30–4:00 | Act 1 | \"Tony Freeth, the UCL mathematician...\" | Image | {\"subject\":\"Modern researcher in lab examining 3D printed reconstruction of Antikythera Mechanism\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"clinical sidelighting, deep shadow background\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"profile shot, focused expression\",\"camera\":\"85mm portrait lens\",\"setting\":\"university research lab, monitors showing tomography\",\"era\":\"contemporary\",\"detail_level\":\"detailed gear reconstruction in foreground\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 4:00–4:30 | Act 1 | \"The gear ratios encode the Metonic cycle...\" | Video | — | Cinematography: animated zoom-in on rotating gear train. Subject: bronze gears interlocking, with semi-transparent overlay showing lunar phases cycling through 19-year Metonic period. Action: gears rotate slowly, moon phases sync above. Context: black void, mathematical annotations fade in. Style & Ambiance: warm ochre highlights on bronze, teal void, photoreal 8K with subtle holographic overlay. Dialogue: none. SFX: precise mechanical clicks per rotation. Ambient: low harmonic drone, faint celestial chime. |\n| 4:30–5:00 | Act 1 | \"This is not a clock. This is an analog computer.\" | Image | {\"subject\":\"Side-by-side comparison: ornate medieval clock and Antikythera Mechanism gear schematic\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"split lighting, dramatic shadow division\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"diptych, perfectly balanced\",\"camera\":\"frontal, symmetrical\",\"setting\":\"dark studio background\",\"era\":\"comparative across eras\",\"detail_level\":\"hyperdetailed mechanisms both sides\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 5:00–5:30 | Pattern Interrupt | \"Machining tolerances under 0.05 millimeters...\" | Image | {\"subject\":\"Extreme macro of tiny bronze gear tooth with caliper measuring micron tolerance\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"harsh raking sidelight, deep chiaroscuro\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"extreme close-up, single tooth dominant\",\"camera\":\"macro 100mm, micro focus\",\"setting\":\"black void\",\"era\":\"timeless\",\"detail_level\":\"individual file marks visible on bronze\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 5:30–6:00 | Pattern Interrupt | \"Made by a bronzesmith. By hand. With Iron Age tools.\" | Image | {\"subject\":\"Ancient Greek bronzesmith bent over workbench with hand files and bronze blank, sweat on brow\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"forge fire warm ochre highlights, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"over-the-shoulder, focused on hands\",\"camera\":\"50mm, intimate\",\"setting\":\"Hellenistic workshop, tools hanging on wall\",\"era\":\"1st century BCE\",\"detail_level\":\"hyperdetailed callused hands, bronze shavings\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 6:00–6:30 | Act 2 | \"Anomaly one. The precision.\" | Image | {\"subject\":\"Single bronze gear isolated against black, every tooth illuminated\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"single rim light, deep chiaroscuro shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"perfectly centered, frontal\",\"camera\":\"macro, sharp\",\"setting\":\"black void\",\"era\":\"timeless\",\"detail_level\":\"every tooth perfectly defined\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 6:30–7:00 | Act 2 | \"Each one. And they are cut accurately enough...\" | Video | — | Cinematography: slow rotation around a single gear tooth, macro perspective. Subject: bronze gear tooth catching light. Action: camera tracks 360 degrees around the tooth, revealing micro-tool marks. Context: pure black void. Style & Ambiance: warm ochre highlights, single key light, photoreal 8K macro. Dialogue: none. SFX: subtle metallic resonance. Ambient: low sub-bass drone, suggesting weight and importance. |\n| 7:00–7:30 | Act 2 | \"Hand-cut gearing of this complexity does not appear anywhere else...\" | Image | {\"subject\":\"Museum storage shelves with thousands of bronze Greek and Roman artifacts, none resembling gears\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"overhead institutional sidelighting, deep shadow rows\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"deep one-point perspective down aisle\",\"camera\":\"24mm wide, dramatic\",\"setting\":\"museum archive warehouse\",\"era\":\"contemporary archive of ancient items\",\"detail_level\":\"countless artifacts catalogued\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 7:30–8:00 | Act 2 | \"Anomaly two. The calendar dialect.\" | Image | {\"subject\":\"Close-up of Greek inscription on Antikythera dial with Corinthian month names highlighted\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"raking sidelight to reveal inscription depth, deep chiaroscuro\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"macro, slight angle to show relief\",\"camera\":\"100mm macro\",\"setting\":\"black void\",\"era\":\"1st century BCE artifact\",\"detail_level\":\"each letter chisel mark visible\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 8:00–8:30 | Act 2 | \"Syracuse is where Archimedes worked.\" | Image | {\"subject\":\"Archimedes at desk with bronze geometric models, scrolls, looking up at night sky through window\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"oil lamp warm ochre highlights, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"three-quarter view, scholar profile\",\"camera\":\"50mm, intimate\",\"setting\":\"Syracuse study, 3rd century BCE\",\"era\":\"Hellenistic\",\"detail_level\":\"hyperdetailed bronze sphere model on desk\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 8:30–9:00 | Pattern Interrupt | \"What kind of civilization produces a machine like this?\" | Image | {\"subject\":\"Modern clockmaker workshop with hundreds of intricate movements, gears, and watchmaking tools\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"warm workshop sidelighting, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"wide overview of workshop\",\"camera\":\"35mm, wide\",\"setting\":\"traditional Swiss watchmaking atelier\",\"era\":\"contrasting modern\",\"detail_level\":\"hundreds of parts visible\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 9:00–9:30 | Pattern Interrupt | \"A culture of clockmakers produces clocks.\" | Image | {\"subject\":\"Chain of historical clock evolution from medieval tower clock to pocket watch laid out on wood\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"overhead museum sidelighting, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"linear timeline overhead\",\"camera\":\"top-down, slight tilt\",\"setting\":\"museum display surface\",\"era\":\"spanning 14th-19th centuries\",\"detail_level\":\"each timepiece hyperdetailed\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 9:30–10:00 | Pattern Interrupt | \"It is, archaeologically speaking, an orphan.\" | Image | {\"subject\":\"The Antikythera Mechanism isolated on a vast empty stone floor, single spotlight from above\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"single dramatic top spotlight, deep chiaroscuro\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"wide shot, tiny object in vast space\",\"camera\":\"24mm wide, low angle\",\"setting\":\"empty cathedral-like stone hall\",\"era\":\"timeless\",\"detail_level\":\"contrast between detail and emptiness\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 10:00–10:30 | Act 2 | \"Anomaly three. The fourteen-hundred-year gap.\" | Video | — | Cinematography: timelapse along a horizontal stone timeline carved with dates. Subject: bronze mechanism on left at 70 BCE, vast empty stretch, medieval clock at 1336 CE on right. Action: camera slides slowly across the empty centuries, dust motes float in shafts of light. Context: ancient stone gallery. Style & Ambiance: deep chiaroscuro, warm ochre highlights at endpoints, photoreal 8K. Dialogue: none. SFX: hollow stone echo of single distant gong. Ambient: cold wind through stone halls, faint cathedral reverb. |\n| 10:30–11:00 | Act 2 | \"Richard of Wallingford's astronomical clock at St. Albans Abbey...\" | Image | {\"subject\":\"Medieval monk Richard of Wallingford assembling massive iron astronomical clock in abbey\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"high stained glass sidelighting, deep chiaroscuro\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"low angle, monk dwarfed by mechanism\",\"camera\":\"35mm wide\",\"setting\":\"St Albans Abbey interior, 14th century\",\"era\":\"medieval\",\"detail_level\":\"hyperdetailed iron gears and stonework\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 11:00–11:30 | Pattern Interrupt | \"Here's where it gets uncomfortable.\" | Image | {\"subject\":\"Descending staircase carved into ancient stone, leading down into darkness\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"single torch warm ochre highlights, deep chiaroscuro shadow descending\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"centered descent into vanishing point\",\"camera\":\"24mm wide, slightly low\",\"setting\":\"ancient subterranean passage\",\"era\":\"timeless ruins\",\"detail_level\":\"weathered stone, dust\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 11:30–12:00 | Pattern Interrupt | \"The last surviving fragment of something older?\" | Image | {\"subject\":\"Antikythera Mechanism fragment held by gloved hand, ghostly silhouettes of other lost devices fade behind it\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"key light on fragment, deep shadow ghosts\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"centered fragment, layered fading shapes behind\",\"camera\":\"85mm, shallow DOF\",\"setting\":\"misty void\",\"era\":\"layered eras\",\"detail_level\":\"sharp foreground, ethereal background\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 12:00–12:30 | Act 3 | \"There is a different way to read this evidence.\" | Image | {\"subject\":\"Open ancient codex with diagrams of gears, star charts, and cataclysm imagery overlaid\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"single candle warm ochre, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"overhead, book centered\",\"camera\":\"top-down macro\",\"setting\":\"dark scholar's desk\",\"era\":\"timeless manuscript\",\"detail_level\":\"hyperdetailed ink diagrams\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 12:30–13:00 | Act 3 | \"Researchers like Graham Hancock and Randall Carlson...\" | Image | {\"subject\":\"Stack of alternative history books and geological survey maps on weathered wooden desk\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"warm desk lamp sidelighting, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"flat lay, slight angle\",\"camera\":\"macro, shallow DOF\",\"setting\":\"researcher's study\",\"era\":\"contemporary research\",\"detail_level\":\"hyperdetailed book spines and map contours\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 13:00–13:30 | Act 3 | \"The Younger Dryas event...\" | Video | — | Cinematography: aerial sweep over frozen tundra transitioning to massive meltwater flood. Subject: ice sheets fracturing, comet fragments streaking sky. Action: catastrophic ice age collapse unfolds in time-lapse. Context: 12,800 years ago, North America. Style & Ambiance: cold teal shadow, ochre fire highlights, photoreal 8K cinematic. Dialogue: none. SFX: distant ice cracks like thunder, comet roar. Ambient: deep wind, low sub-bass rumble of continental ice movement. |\n| 13:30–14:00 | Act 3 | \"Archimedes was not the inventor... He was a late practitioner.\" | Image | {\"subject\":\"Archimedes inheriting a sealed bronze cylinder from an older robed figure in shadowed temple\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"oil lamp warm ochre, deep chiaroscuro shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"two figures, transfer of object centered\",\"camera\":\"50mm, intimate\",\"setting\":\"ancient temple inner chamber\",\"era\":\"Hellenistic, suggesting older lineage\",\"detail_level\":\"hyperdetailed robes and bronze cylinder\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 14:00–14:30 | Act 3 | \"Cicero saw it. Touched it.\" | Image | {\"subject\":\"Cicero examining Archimedes' bronze celestial sphere with hands, oil lamps illuminating gears\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"multiple oil lamps warm ochre highlights, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"three-quarter view, sphere prominent\",\"camera\":\"50mm\",\"setting\":\"Roman villa interior, 1st century BCE\",\"era\":\"late Republic Rome\",\"detail_level\":\"hyperdetailed bronze sphere with planetary rings\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 14:30–15:00 | Pattern Interrupt | \"Look, I know how this sounds.\" | Image | {\"subject\":\"Open notebook with handwritten skeptical questions and arrows, pen resting on page\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"warm desk lamp sidelighting, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"overhead, centered\",\"camera\":\"macro\",\"setting\":\"researcher's desk\",\"era\":\"contemporary\",\"detail_level\":\"hyperdetailed handwriting\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 15:00–15:30 | Act 3 | \"A placeholder. It is what you say when you do not have an answer...\" | Image | {\"subject\":\"Academic paper with the words 'singular achievement' circled in red ink\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"single desk lamp warm ochre, deep shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"macro overhead\",\"camera\":\"100mm macro\",\"setting\":\"dark desk\",\"era\":\"contemporary academic\",\"detail_level\":\"crisp typography, red ink stark\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 15:30–16:00 | Act 3 | \"A technological tradition we have not adequately accounted for.\" | Image | {\"subject\":\"Genealogical tree of mechanical devices branching backward into darkness, gaps shown as broken branches\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"key light fading into deep chiaroscuro shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"vertical, roots descending into shadow\",\"camera\":\"35mm, slight upward tilt\",\"setting\":\"void background\",\"era\":\"layered timeline\",\"detail_level\":\"hyperdetailed device illustrations on branches\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 16:00–16:30 | Act 3 | \"Civilizations regress. Knowledge is lost.\" | Video | — | Cinematography: slow push through ruins of a once-great city, time-lapse decay. Subject: temple columns crumbling, libraries burning in distance, jungle reclaiming stonework. Action: civilization collapse compressed across centuries. Context: unspecified ancient civilization. Style & Ambiance: ochre-shadow grade, smoke and dust, photoreal 8K cinematic. Dialogue: none. SFX: distant crackling fire, stone falling, wind. Ambient: low ominous drone, faint echo of voices long gone. |\n| 16:30–17:00 | Act 3 | \"Peaks come early, and the climb back takes a very long time.\" | Image | {\"subject\":\"Mountain peak silhouette with valley of fog and shadow below, single small figure climbing back up\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"backlit golden hour sidelighting, deep valley shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"wide landscape, vertical scale emphasis\",\"camera\":\"35mm wide\",\"setting\":\"mountainous terrain, dawn\",\"era\":\"timeless metaphor\",\"detail_level\":\"hyperdetailed terrain and atmospheric depth\",\"negative_constraints\":[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]} | — |\n| 17:00–17:30 | Act 3 | \"The Antikythera Mechanism is a data point on that curve.\" | Image | {\"subject\":\"The mechanism plotted as single bronze marker on a vast graph of human technological history\",\"style\":\"Photorealistic, cinematic, 8K\",\"color_palette\":[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"],\"lighting\":\"directional key light, deep chiaroscuro shadow\",\"mood\":\"ancient, mysterious, slightly ominous\",\"composition\":\"diagonal axis with mechanism at peak point\",\"camera\":\"35mm, slight angle\",\"setting\":\"dark void with faint grid\",\"era"
+            }
+          ],
+          "stop_reason": "max_tokens",
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 2485,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 16000,
+            "service_tier": "standard",
+            "inference_geo": "global"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "cdb675c3-069b-48ec-8124-e69d4dcc6c20",
+  "activeVersionId": "cdb675c3-069b-48ec-8124-e69d4dcc6c20",
+  "versionCounter": 77,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-18T19:06:43.033Z",
+      "createdAt": "2026-05-18T19:06:43.033Z",
+      "role": "workflow:owner",
+      "workflowId": "ruins-untold-pipeline-v1",
+      "projectId": "ltHsn5mbKZUTpYlg",
+      "project": {
+        "updatedAt": "2026-05-18T15:28:45.014Z",
+        "createdAt": "2026-05-18T15:27:22.980Z",
+        "id": "ltHsn5mbKZUTpYlg",
+        "name": "JeezyAndNay Neal <unclejeezyandladynay@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "af2abf74-a4e9-4319-875f-87671c53e774"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-20T20:00:16.961Z",
+    "createdAt": "2026-05-20T20:00:16.961Z",
+    "versionId": "cdb675c3-069b-48ec-8124-e69d4dcc6c20",
+    "workflowId": "ruins-untold-pipeline-v1",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "ruins-untold-topic-form",
+          "formTitle": "Ruins Untold — New Episode",
+          "formDescription": "=Enter the episode details below to begin the production pipeline.",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "TOPIC",
+                "placeholder": "e.g. The Younger Dryas Impact Event",
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "ANGLE",
+                "fieldType": "textarea",
+                "placeholder": "The specific question or argument this video is making...",
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "KEY_EVIDENCE",
+                "fieldType": "textarea",
+                "placeholder": "2-5 specific sites, artifacts, or findings (comma or line separated)",
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "KEY_RESEARCHERS",
+                "fieldType": "textarea",
+                "placeholder": "Researchers or sources to cite (comma or line separated)",
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "RELATED_VIDEO",
+                "placeholder": "Title of a previous Ruins Untold video to tease at the end"
+              },
+              {
+                "fieldLabel": "HOOK_STYLE",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    {
+                      "option": "contradiction"
+                    },
+                    {
+                      "option": "question"
+                    },
+                    {
+                      "option": "paradox"
+                    },
+                    {
+                      "option": "evidence"
+                    },
+                    {
+                      "option": "revelation"
+                    },
+                    {
+                      "option": "statement"
+                    },
+                    {
+                      "option": "anomaly"
+                    }
+                  ]
+                },
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "TONE_DIAL",
+                "fieldType": "number",
+                "placeholder": "0 = fully measured, 10 = fully conspiratorial (default: 7)",
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "VOICE_ID",
+                "placeholder": "ElevenLabs Voice ID for the host voiceover",
+                "requiredField": true
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "node-01-form-trigger",
+        "name": "Video Topic Form",
+        "type": "n8n-nodes-base.formTrigger",
+        "typeVersion": 2,
+        "position": [
+          0,
+          304
+        ],
+        "webhookId": "ruins-untold-topic-form"
+      },
+      {
+        "parameters": {
+          "mode": "manual",
+          "duplicateItem": false,
+          "assignments": {
+            "assignments": [
+              {
+                "id": "pv-topic",
+                "name": "TOPIC",
+                "value": "={{ $json.TOPIC }}",
+                "type": "string"
+              },
+              {
+                "id": "pv-angle",
+                "name": "ANGLE",
+                "value": "={{ $json.ANGLE }}",
+                "type": "string"
+              },
+              {
+                "id": "pv-evidence",
+                "name": "KEY_EVIDENCE",
+                "value": "={{ $json.KEY_EVIDENCE }}",
+                "type": "string"
+              },
+              {
+                "id": "pv-researchers",
+                "name": "KEY_RESEARCHERS",
+                "value": "={{ $json.KEY_RESEARCHERS }}",
+                "type": "string"
+              },
+              {
+                "id": "pv-related",
+                "name": "RELATED_VIDEO",
+                "value": "={{ $json.RELATED_VIDEO || 'N/A' }}",
+                "type": "string"
+              },
+              {
+                "id": "pv-hook",
+                "name": "HOOK_STYLE",
+                "value": "={{ $json.HOOK_STYLE }}",
+                "type": "string"
+              },
+              {
+                "id": "pv-tone",
+                "name": "TONE_DIAL",
+                "value": "={{ $json.TONE_DIAL || 7 }}",
+                "type": "number"
+              },
+              {
+                "id": "pv-voice",
+                "name": "VOICE_ID",
+                "value": "={{ $json.VOICE_ID }}",
+                "type": "string"
+              },
+              {
+                "id": "pv-slug",
+                "name": "projectSlug",
+                "value": "={{ $json.TOPIC.toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 40) + '_' + new Date().toISOString().replace(/[^0-9]/g, '').substring(0, 12) }}",
+                "type": "string"
+              },
+              {
+                "id": "pv-dir",
+                "name": "projectDir",
+                "value": "={{ '/Users/jneal/Antigravity/out/' + $json.TOPIC.toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 40) + '_' + new Date().toISOString().replace(/[^0-9]/g, '').substring(0, 12) }}",
+                "type": "string"
+              },
+              {
+                "id": "pv-revision",
+                "name": "revisionNotes",
+                "value": "",
+                "type": "string"
+              },
+              {
+                "id": "pv-vorev",
+                "name": "voiceoverRevisionNotes",
+                "value": "",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "node-02-set-vars",
+        "name": "Set Project Variables",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3,
+        "position": [
+          240,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "command": "={{ 'mkdir -p \"' + $json.projectDir + '/audio\" \"' + $json.projectDir + '/images\" \"' + $json.projectDir + '/videos\" \"' + $json.projectDir + '/scripts\" \"' + $json.projectDir + '/music\" \"' + $json.projectDir + '/sfx\" && echo \"Directories created: ' + $json.projectDir + '\"' }}"
+        },
+        "id": "node-03-mkdir",
+        "name": "Create Project Directories",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          480,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "anthropicApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              },
+              {
+                "name": "x-api-key",
+                "value": "={{ $credentials.httpHeaderAuth.value }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({\n  model: 'claude-opus-4-7',\n  max_tokens: 16000,\n  system: `You are the lead scriptwriter for Ruins Untold, a long-form YouTube channel exploring ancient mysteries, forbidden archaeology, and alternative history. Your job is to write scripts that sound like they were written by the host — not by an AI.\n\nCHANNEL IDENTITY\nChannel name: Ruins Untold\nFormat: Long-form YouTube (~20 minutes per video)\nCore premise: The gap between mainstream historical narrative and the physical, geological, and archaeological evidence that mainstream academia cannot — or will not — adequately explain.\nChannel promise: \"We go where the evidence leads, even when it leads somewhere uncomfortable.\"\n\nTONE PROFILE\nPRIMARY VOICE — Conversational authority. You know this material deeply. You have done the research. But you are sharing it with a friend, not presenting a dissertation. Never academic. Never breathless. Measured, deliberate, occasionally wry.\n\nCONSPIRATORIAL REGISTER — Slightly conspiratorial, never unhinged. The framing is always: \"Here is what the evidence shows. Draw your own conclusions.\" Never state unfalsifiable claims as fact. \"Suggests\" and \"points toward\" are your hedges. Use them.\n\nSELF-AWARE DISCLAIMERS — Maximum two per script. Approved forms: \"Look, I know how this sounds...\", \"I'm not saying this is proof of anything, but...\", \"I'm no conspiracy theorist, but you have to ask...\", \"Bear with me here.\"\n\nTHE COLLECTIVE WE — Use: \"We've been told...\", \"What we're looking at here...\", \"Come with me as we explore...\", \"We're not supposed to ask this question.\"\n\nPACING — Build slowly. Use \"...\" to mark deliberate pause. Short sentences for emphasis.\n\nAUDIENCE: Age 25-65, global English-speaking. Skeptical of institutional authority. Not fringe. Global clarity — no idioms, American sports metaphors, or British slang.\n\nSCRIPT STRUCTURE — 20-MINUTE LONG FORM\n\nHOOK (0:00–0:45): Open inside the mystery. Do not introduce channel or host first. Hook formats: QUESTION (three escalating questions, third has no mainstream answer), PARADOX (two facts that cannot both be true), EVIDENCE (open on the anomaly), CONTRADICTION (state mainstream claim, then the physical evidence against it). Always end: \"Welcome to Ruins Untold. Come with me as we explore this together.\"\n\nCONTEXT BRIDGE (0:45–2:30): Establish mainstream position fairly. Tone: measured, slightly dry.\n\nACT 1 — THE OFFICIAL STORY (2:30–6:00): Honest detail of consensus model. Pattern interrupt at ~5:00.\n\nACT 2 — THE ANOMALIES (6:00–12:00): Each anomaly: (1) State clearly, (2) Why mainstream explanation insufficient, (3) \"We will come back to what this means.\" Pattern interrupt at ~8:30 (change angle). Pattern interrupt at ~11:00 (emotional peak: \"Here's where it gets uncomfortable.\").\n\nACT 3 — THE ALTERNATIVE INTERPRETATION (12:00–17:30): Alternative model with specificity. Cite real researchers. Approved: Graham Hancock, Randall Carlson, Robert Schoch, John Anthony West, Brien Foerster, James Kennett, Allen West, Christopher Moore, Andrew Collins, Michael Cremo. Pattern interrupt at ~14:30 (self-aware disclaimer).\n\nRESOLUTION + CTA (17:30–20:00): (1) Summary without mainstream framing, (2) \"The question isn't whether this existed. The question is why we are not allowed to ask.\", (3) Subscribe CTA + comment + related video, (4) Episode tease.\n\nLANGUAGE RULES\nALWAYS: Present tense for evidence. Short sentences. \"...\" for pause. Hedged language. \"We\" for collective discovery.\nNEVER: \"delve\", \"captivating\", \"fascinating\", \"it's worth noting\", \"in conclusion\", academic passive voice, \"In today's video\", \"Make sure to like and subscribe\" before CTA, \"As we all know\", \"Throughout history\", condescension toward academics, unverifiable claims as fact.\n\nLOCKED VOICE SAMPLE: \"Why did every ancient civilization suddenly stop building around 1200 BC? Was it climate change?...Was it caused by humans?...Or was it something else entirely?...Welcome to Ruins Untold...Come with me as we explore these questions together.\"\n\nOUTPUT FORMAT — produce exactly:\n1. SCRIPT — Full 20-minute script with timestamps and section headers\n2. HOOK VARIANTS — 2 alternative hooks (other two formats)\n3. CHAPTER MARKERS — YouTube timestamps`,\n  messages: [{\n    role: 'user',\n    content: 'TOPIC: ' + $('Set Project Variables').item.json.TOPIC + '\\nANGLE: ' + $('Set Project Variables').item.json.ANGLE + '\\nKEY_EVIDENCE: ' + $('Set Project Variables').item.json.KEY_EVIDENCE + '\\nKEY_RESEARCHERS: ' + $('Set Project Variables').item.json.KEY_RESEARCHERS + '\\nRELATED_VIDEO: ' + $('Set Project Variables').item.json.RELATED_VIDEO + '\\nHOOK_STYLE: ' + $('Set Project Variables').item.json.HOOK_STYLE + '\\nTONE_DIAL: ' + $('Set Project Variables').item.json.TONE_DIAL + ($('Set Project Variables').item.json.revisionNotes ? '\\n\\nREVISION NOTES FROM PREVIOUS DRAFT: ' + $('Set Project Variables').item.json.revisionNotes : '')\n  }]\n}) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "id": "node-04-claude-script",
+        "name": "Generate Script — Claude",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          720,
+          304
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "mkdg6co1DLJ0gHMk",
+            "name": "Header Auth account"
+          },
+          "anthropicApi": {
+            "id": "iVpBXuoEd2MVv9fg",
+            "name": "Anthropic account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const response = $input.item.json;\nconst fullText = response.content[0].text;\n\n// Split sections\nconst scriptMatch = fullText.match(/(?:#{1,2}\\s*SCRIPT|1\\.\\s*SCRIPT)[\\s\\S]*?(?=(?:#{1,2}\\s*HOOK VARIANTS|2\\.\\s*HOOK)|$)/i);\nconst hookVarsMatch = fullText.match(/(?:#{1,2}\\s*HOOK VARIANTS|2\\.\\s*HOOK)[\\s\\S]*?(?=(?:#{1,2}\\s*THUMBNAIL|3\\.\\s*THUMB)|$)/i);\nconst thumbMatch = fullText.match(/(?:#{1,2}\\s*THUMBNAIL|3\\.\\s*THUMB)[\\s\\S]*?(?=(?:#{1,2}\\s*VISUAL|4\\.\\s*VISUAL)|$)/i);\nconst promptsMatch = fullText.match(/(?:#{1,2}\\s*VISUAL PROMPTS?|4\\.\\s*VISUAL)[\\s\\S]*?(?=(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)|$)/i);\nconst chaptersMatch = fullText.match(/(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)[\\s\\S]*$/i);\n\nconst scriptText = scriptMatch ? scriptMatch[0].trim() : fullText;\nconst voiceoverText = scriptText\n  .replace(/\\[.*?\\]/g, '')\n  .replace(/\\(.*?\\)/g, '')\n  .replace(/^\\s*(#{1,3}.*|[A-Z\\s]+:.*|\\d+:\\d+.*|---.*)/gm, '')\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\nconst projectVars = $('Set Project Variables').item.json;\n\nreturn [{\n  json: {\n    ...projectVars,\n    fullOutput: fullText,\n    scriptText: scriptText,\n    voiceoverText: voiceoverText,\n    hookVariants: hookVarsMatch ? hookVarsMatch[0].trim() : '',\n    thumbnailConcept: thumbMatch ? thumbMatch[0].trim() : '',\n    visualPromptsTable: promptsMatch ? promptsMatch[0].trim() : '',\n    chapterMarkers: chaptersMatch ? chaptersMatch[0].trim() : '',\n    characterCount: voiceoverText.length,\n    estimatedMinutes: Math.round(voiceoverText.split(' ').length / 140)\n  }\n}];"
+        },
+        "id": "node-05-parse-script",
+        "name": "Parse Script Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          960,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "command": "={{ \"cat > \\\"\" + $json.projectDir + \"/scripts/full_output.md\\\" << 'RUINS_EOF'\\n\" + $json.fullOutput + \"\\nRUINS_EOF\\necho \\\"Script saved.\\\"\" }}"
+        },
+        "id": "node-06-save-script",
+        "name": "Save Script to File",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          1200,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "resume": "form",
+          "formTitle": "Ruins Untold — Script Review",
+          "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**ESTIMATED LENGTH:** ~' + $json.estimatedMinutes + ' minutes\\n\\n**SCRIPT PREVIEW (first 3000 chars):**\\n```\\n' + ($json.scriptText || '').substring(0, 3000) + '\\n```\\n\\n**Full script saved at:** `' + $json.projectDir + '/scripts/full_output.md`\\n\\nReview the full script before approving.' }}",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "Decision",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    {
+                      "option": "approve"
+                    },
+                    {
+                      "option": "revise"
+                    }
+                  ]
+                },
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Revision Notes",
+                "fieldType": "textarea",
+                "placeholder": "What needs to change? (only required if selecting 'revise')"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "node-07-script-review",
+        "name": "Script Review & Approval",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1,
+        "position": [
+          1440,
+          304
+        ],
+        "webhookId": "ruins-script-review"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "cond-script",
+                "leftValue": "={{ $json.Decision }}",
+                "rightValue": "approve",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "node-08-script-if",
+        "name": "Script Approved?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1680,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ model: 'claude-opus-4-7', max_tokens: 16000, system: 'You are revising a Ruins Untold YouTube script. Apply the same style guide as before. Incorporate the specific revision feedback provided. Keep all approved sections intact.', messages: [{ role: 'user', content: 'ORIGINAL SCRIPT:\\n' + $json.scriptText + '\\n\\nREVISION FEEDBACK: ' + $json['Revision Notes'] + '\\n\\nPlease revise the script incorporating this feedback while maintaining all Ruins Untold style guidelines. Output the complete revised script, hook variants, thumbnail concept, visual prompts table, and chapter markers.' }] }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "id": "node-09-revise-script",
+        "name": "Revise Script — Claude",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          1920,
+          512
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "mkdg6co1DLJ0gHMk",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const response = $input.item.json;\nconst fullText = response.content[0].text;\n\nconst scriptMatch = fullText.match(/(?:#{1,2}\\s*SCRIPT|1\\.\\s*SCRIPT)[\\s\\S]*?(?=(?:#{1,2}\\s*HOOK VARIANTS|2\\.\\s*HOOK)|$)/i);\nconst promptsMatch = fullText.match(/(?:#{1,2}\\s*VISUAL PROMPTS?|4\\.\\s*VISUAL)[\\s\\S]*?(?=(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)|$)/i);\nconst chaptersMatch = fullText.match(/(?:#{1,2}\\s*CHAPTER|5\\.\\s*CHAPTER)[\\s\\S]*$/i);\nconst thumbMatch = fullText.match(/(?:#{1,2}\\s*THUMBNAIL|3\\.\\s*THUMB)[\\s\\S]*?(?=(?:#{1,2}\\s*VISUAL|4\\.)|$)/i);\n\nconst scriptText = scriptMatch ? scriptMatch[0].trim() : fullText;\nconst voiceoverText = scriptText\n  .replace(/\\[.*?\\]/g, '').replace(/\\(.*?\\)/g, '')\n  .replace(/^\\s*(#{1,3}.*|[A-Z\\s]+:.*|\\d+:\\d+.*|---.*)/gm, '')\n  .replace(/\\n{3,}/g, '\\n\\n').trim();\n\nconst prevVars = $('Set Project Variables').item.json;\n\nreturn [{ json: {\n  ...prevVars,\n  fullOutput: fullText,\n  scriptText,\n  voiceoverText,\n  visualPromptsTable: promptsMatch ? promptsMatch[0].trim() : '',\n  chapterMarkers: chaptersMatch ? chaptersMatch[0].trim() : '',\n  thumbnailConcept: thumbMatch ? thumbMatch[0].trim() : '',\n  characterCount: voiceoverText.length,\n  estimatedMinutes: Math.round(voiceoverText.split(' ').length / 140)\n}}];"
+        },
+        "id": "node-10-parse-revised",
+        "name": "Parse Revised Script",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2160,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "command": "={{ \"cat > \\\"\" + $json.projectDir + \"/scripts/full_output.md\\\" << 'RUINS_EOF'\\n\" + $json.fullOutput + \"\\nRUINS_EOF\\necho \\\"Revised script saved.\\\"\" }}"
+        },
+        "id": "node-11-save-revised-script",
+        "name": "Save Revised Script",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          2400,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://api.elevenlabs.io/v1/text-to-speech/{{ $json.VOICE_ID }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "xi-api-key",
+                "value": "={{ $credentials.httpHeaderAuth.value }}"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              },
+              {
+                "name": "accept",
+                "value": "audio/mpeg"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ text: $json.voiceoverText, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.35, use_speaker_boost: true } }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            },
+            "timeout": 300000
+          }
+        },
+        "id": "node-12-elevenlabs-tts",
+        "name": "Generate Voiceover — ElevenLabs",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          1920,
+          304
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "elevenlabs-api-key",
+            "name": "ElevenLabs API Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fileName": "={{ $json.projectDir }}/audio/voiceover.mp3",
+          "options": {}
+        },
+        "id": "node-13-save-voiceover",
+        "name": "Save Voiceover File",
+        "type": "n8n-nodes-base.writeBinaryFile",
+        "typeVersion": 1,
+        "position": [
+          2160,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "resume": "form",
+          "formTitle": "Ruins Untold — Voiceover Review",
+          "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**Voiceover file saved at:**\\n`' + $json.projectDir + '/audio/voiceover.mp3`\\n\\nPlease listen to the voiceover before approving. Open the file in any audio player.\\n\\n**Estimated duration:** ~' + $json.estimatedMinutes + ' minutes' }}",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "Decision",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    {
+                      "option": "approve"
+                    },
+                    {
+                      "option": "regenerate"
+                    }
+                  ]
+                },
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Regeneration Notes",
+                "fieldType": "textarea",
+                "placeholder": "Any issues with pacing, pronunciation, or delivery? (only if regenerating)"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "node-14-voiceover-review",
+        "name": "Voiceover Review & Approval",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1,
+        "position": [
+          2400,
+          304
+        ],
+        "webhookId": "ruins-voiceover-review"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "cond-vo",
+                "leftValue": "={{ $json.Decision }}",
+                "rightValue": "approve",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "node-15-voiceover-if",
+        "name": "Voiceover Approved?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          2640,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ model: 'claude-opus-4-7', max_tokens: 8000, system: 'You are a video post-production supervisor for Ruins Untold YouTube channel. Analyze scripts and identify precise placement cues for visual media, background music, and sound effects. Output structured JSON only.', messages: [{ role: 'user', content: 'Analyze this script and identify where images, video clips, background music, and sound effects should be placed. For each cue output a JSON array with objects: {type: \"image\"|\"video\"|\"music\"|\"sfx\", timestamp: \"MM:SS\", duration_seconds: N, description: \"...\", mood: \"...\", script_line: \"first few words of line\"}.\\n\\nRules:\\n- Images: for slower, static moments or evidence presentation\\n- Videos: for dramatic reveals, establishing shots, action sequences\\n- Music: background scoring (note: underscore, peak, outro)\\n- SFX: punctuation sounds (wind, impact, rumble, breath)\\n\\nSCRIPT:\\n' + $json.scriptText }] }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "id": "node-16-claude-analyze",
+        "name": "Analyze Media Placement — Claude",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          2880,
+          304
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "mkdg6co1DLJ0gHMk",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ model: 'claude-opus-4-7', max_tokens: 16000, system: 'You generate structured asset prompt arrays for a YouTube documentary production pipeline. Output only valid JSON arrays, no markdown.', messages: [{ role: 'user', content: 'Based on this visual prompts table and placement analysis, generate four JSON arrays:\\n\\n1. IMAGE_PROMPTS: array of {index: N, timestamp: \"MM:SS\", nb2_prompt: {12-field NB2 JSON}, filename: \"img_NNNN.png\"}\\n   NB2 locked fields: style:\"Photorealistic, cinematic, 8K\", color_palette:[\"cinematic teal-orange desaturation\",\"deep shadow accent\",\"warm ochre highlights\"], lighting:\"golden hour sidelighting or deep chiaroscuro shadow\", mood:\"ancient, mysterious, slightly ominous\", negative_constraints:[\"no modern elements\",\"no flat lighting\",\"no extra limbs\",\"no motion blur\"]\\n\\n2. VIDEO_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: 8, veo_prompt: \"[Cinematography]+[Subject]+[Action]+[Context]+[Style] 100-150 words with Dialogue: SFX: Ambient: audio layers\", filename: \"vid_NNNN.mp4\"}\\n\\n3. MUSIC_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: N, type: \"underscore\"|\"peak\"|\"outro\", prompt: \"ElevenLabs sound generation prompt for cinematic background music\", filename: \"music_NN.mp3\"}\\n\\n4. SFX_PROMPTS: array of {index: N, timestamp: \"MM:SS\", duration_seconds: N, prompt: \"ElevenLabs sound generation prompt for sound effect\", filename: \"sfx_NN.mp3\"}\\n\\nVISUAL PROMPTS TABLE:\\n' + $json.visualPromptsTable + '\\n\\nPLACEMENT ANALYSIS:\\n' + $('Analyze Media Placement — Claude').item.json.content[0].text }] }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "id": "node-17-claude-prompts",
+        "name": "Generate Asset Prompts — Claude",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          3120,
+          304
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "mkdg6co1DLJ0gHMk",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const response = $input.item.json;\nconst rawText = response.content[0].text;\n\nlet imagePrompts = [], videoPrompts = [], musicPrompts = [], sfxPrompts = [];\n\ntry {\n  const imgMatch = rawText.match(/IMAGE_PROMPTS[^\\[]*([\\s\\S]*?)(?=VIDEO_PROMPTS|$)/i);\n  const vidMatch = rawText.match(/VIDEO_PROMPTS[^\\[]*([\\s\\S]*?)(?=MUSIC_PROMPTS|$)/i);\n  const musMatch = rawText.match(/MUSIC_PROMPTS[^\\[]*([\\s\\S]*?)(?=SFX_PROMPTS|$)/i);\n  const sfxMatch = rawText.match(/SFX_PROMPTS[^\\[]*([\\s\\S]*?)(?=\\n\\n[A-Z]|$)/i);\n\n  const extractArray = (match) => {\n    if (!match) return [];\n    const arrMatch = match[0].match(/\\[[\\s\\S]*\\]/);\n    if (!arrMatch) return [];\n    try { return JSON.parse(arrMatch[0]); } catch(e) { return []; }\n  };\n\n  imagePrompts = extractArray(imgMatch);\n  videoPrompts = extractArray(vidMatch);\n  musicPrompts = extractArray(musMatch);\n  sfxPrompts = extractArray(sfxMatch);\n} catch(e) {\n  console.error('Prompt parse error:', e.message);\n}\n\nconst prevData = $('Parse Script Response').item.json;\n\nreturn [{ json: {\n  ...prevData,\n  imagePrompts,\n  videoPrompts,\n  musicPrompts,\n  sfxPrompts,\n  rawPromptsOutput: rawText,\n  imageTotalCount: imagePrompts.length,\n  videoTotalCount: videoPrompts.length,\n  musicTotalCount: musicPrompts.length,\n  sfxTotalCount: sfxPrompts.length\n}}];"
+        },
+        "id": "node-18-parse-prompts",
+        "name": "Parse Asset Prompts",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3360,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "command": "={{ \"cat > \\\"\" + $json.projectDir + \"/scripts/asset_prompts.json\\\" << 'RUINS_EOF'\\n\" + $json.rawPromptsOutput + \"\\nRUINS_EOF\\necho \\\"Prompts saved: \" + $json.imageTotalCount + \" images, \" + $json.videoTotalCount + \" videos, \" + $json.musicTotalCount + \" music, \" + $json.sfxTotalCount + \" sfx\\\"\" }}"
+        },
+        "id": "node-19-save-prompts",
+        "name": "Save Prompts File",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          3600,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "resume": "form",
+          "formTitle": "Ruins Untold — Asset Prompts Review",
+          "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**Asset counts ready for generation:**\\n- Images (NanoBanana 2): ' + $json.imageTotalCount + '\\n- Videos (Veo 3.1 Fast): ' + $json.videoTotalCount + '\\n- Music cues (ElevenLabs): ' + $json.musicTotalCount + '\\n- SFX cues (ElevenLabs): ' + $json.sfxTotalCount + '\\n\\n**All prompts saved at:**\\n`' + $json.projectDir + '/scripts/asset_prompts.json`\\n\\nReview the prompts file before approving generation. This step commits to API costs.' }}",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "Decision",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    {
+                      "option": "approve — begin generation"
+                    },
+                    {
+                      "option": "revise prompts"
+                    }
+                  ]
+                },
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Revision Notes",
+                "fieldType": "textarea",
+                "placeholder": "Describe any prompt changes needed (only if revising)"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "node-20-prompts-review",
+        "name": "Prompts Review & Approval",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1,
+        "position": [
+          3840,
+          304
+        ],
+        "webhookId": "ruins-prompts-review"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "cond-prompts",
+                "leftValue": "={{ $json.Decision }}",
+                "rightValue": "approve",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "node-21-prompts-if",
+        "name": "Prompts Approved?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          4080,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "node-32-split-music",
+        "name": "Split Music Prompts",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          4320,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.elevenlabs.io/v1/sound-generation",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "xi-api-key",
+                "value": "={{ $credentials.httpHeaderAuth.value }}"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              },
+              {
+                "name": "accept",
+                "value": "audio/mpeg"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ text: $json.prompt, duration_seconds: $json.duration_seconds || 30, prompt_influence: 0.5 }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file",
+                "outputPropertyName": "audioData"
+              }
+            },
+            "timeout": 120000
+          }
+        },
+        "id": "node-33-gen-music",
+        "name": "Generate Music — ElevenLabs",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          4560,
+          608
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "elevenlabs-api-key",
+            "name": "ElevenLabs API Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/music/{{ $json.filename }}",
+          "dataPropertyName": "audioData",
+          "options": {}
+        },
+        "id": "node-34-save-music",
+        "name": "Save Music File",
+        "type": "n8n-nodes-base.writeBinaryFile",
+        "typeVersion": 1,
+        "position": [
+          4800,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "node-35-split-sfx",
+        "name": "Split SFX Prompts",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          4320,
+          800
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.elevenlabs.io/v1/sound-generation",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "xi-api-key",
+                "value": "={{ $credentials.httpHeaderAuth.value }}"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              },
+              {
+                "name": "accept",
+                "value": "audio/mpeg"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ text: $json.prompt, duration_seconds: $json.duration_seconds || 5, prompt_influence: 0.6 }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file",
+                "outputPropertyName": "audioData"
+              }
+            },
+            "timeout": 120000
+          }
+        },
+        "id": "node-36-gen-sfx",
+        "name": "Generate SFX — ElevenLabs",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          4560,
+          800
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "elevenlabs-api-key",
+            "name": "ElevenLabs API Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/sfx/{{ $json.filename }}",
+          "dataPropertyName": "audioData",
+          "options": {}
+        },
+        "id": "node-37-save-sfx",
+        "name": "Save SFX File",
+        "type": "n8n-nodes-base.writeBinaryFile",
+        "typeVersion": 1,
+        "position": [
+          4800,
+          800
+        ]
+      },
+      {
+        "parameters": {
+          "mode": "waitForAll",
+          "options": {}
+        },
+        "id": "node-38-merge-assets",
+        "name": "All Assets Complete",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 2,
+        "position": [
+          5040,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const parsedData = $('Parse Asset Prompts').item.json;\nconst projectDir = parsedData.projectDir;\n\nconst manifest = {\n  projectDir,\n  topic: parsedData.TOPIC,\n  voiceover: projectDir + '/audio/voiceover.mp3',\n  images: (parsedData.imagePrompts || []).map(p => ({\n    filename: projectDir + '/images/' + p.filename,\n    timestamp: p.timestamp,\n    duration: 8\n  })),\n  videos: (parsedData.videoPrompts || []).map(p => ({\n    filename: projectDir + '/videos/' + p.filename,\n    timestamp: p.timestamp,\n    duration: p.duration_seconds || 8\n  })),\n  music: (parsedData.musicPrompts || []).map(p => ({\n    filename: projectDir + '/music/' + p.filename,\n    timestamp: p.timestamp,\n    duration: p.duration_seconds || 30,\n    type: p.type\n  })),\n  sfx: (parsedData.sfxPrompts || []).map(p => ({\n    filename: projectDir + '/sfx/' + p.filename,\n    timestamp: p.timestamp,\n    duration: p.duration_seconds || 5\n  }))\n};\n\nreturn [{ json: { manifest, projectDir, TOPIC: parsedData.TOPIC } }];"
+        },
+        "id": "node-39-build-manifest",
+        "name": "Build Asset Manifest",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5280,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "resume": "form",
+          "formTitle": "Ruins Untold — Final Assets Review",
+          "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**Generated assets are in:** `' + $json.projectDir + '`\\n\\n**Asset summary:**\\n- Images: `' + $json.projectDir + '/images/`\\n- Videos: `' + $json.projectDir + '/videos/`\\n- Music: `' + $json.projectDir + '/music/`\\n- SFX: `' + $json.projectDir + '/sfx/`\\n- Voiceover: `' + $json.projectDir + '/audio/voiceover.mp3`\\n\\nReview all assets before approving FFMpeg assembly. Assembly is the final step.' }}",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "Decision",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    {
+                      "option": "approve — assemble final video"
+                    },
+                    {
+                      "option": "hold — do not assemble"
+                    }
+                  ]
+                },
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Notes",
+                "fieldType": "textarea",
+                "placeholder": "Any notes for post-production..."
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "node-40-assets-review",
+        "name": "Assets Review & Final Approval",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1,
+        "position": [
+          5520,
+          512
+        ],
+        "webhookId": "ruins-assets-review"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "cond-assets",
+                "leftValue": "={{ $json.Decision }}",
+                "rightValue": "approve",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "node-41-assets-if",
+        "name": "Assets Approved?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          5760,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const { manifest, projectDir } = $input.item.json;\n\nconst slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').substring(0, 40);\nconst outputFile = `/Users/jneal/Antigravity/out/${slugify(manifest.topic)}_final.mp4`;\nconst concatFile = `${projectDir}/scripts/video_concat.txt`;\nconst musicMixFile = `${projectDir}/scripts/music_concat.txt`;\n\n// Build concat list from videos and images sorted by timestamp\nconst allVisuals = [\n  ...manifest.images.map(i => ({ ...i, mediaType: 'image' })),\n  ...manifest.videos.map(v => ({ ...v, mediaType: 'video' }))\n].sort((a, b) => {\n  const toSec = t => { const [m,s] = (t||'0:00').split(':'); return parseInt(m)*60+parseInt(s); };\n  return toSec(a.timestamp) - toSec(b.timestamp);\n});\n\nconst concatLines = allVisuals.map(v => {\n  if (v.mediaType === 'image') {\n    return `file '${v.filename}'\\nduration ${v.duration || 8}`;\n  } else {\n    return `file '${v.filename}'`;\n  }\n}).join('\\n');\n\n// Music concat\nconst musicLines = manifest.music.map(m => `file '${m.filename}'\\nduration ${m.duration}`).join('\\n');\n\n// Build SFX filter inputs\nconst sfxInputs = manifest.sfx.map((s, i) => `-i \"${s.filename}\"`).join(' ');\nconst sfxMixParts = manifest.sfx.map((_, i) => `[${i + 3}:a]`).join('');\nconst totalAudioInputs = manifest.sfx.length + 3;\nconst sfxMixFilter = manifest.sfx.length > 0\n  ? `;${sfxMixParts}amix=inputs=${manifest.sfx.length}[sfxmix];[2:a][sfxmix]amix=inputs=2:weights=1 0.15[bgmix];[1:a][bgmix]amix=inputs=2:weights=1 0.25[aout]`\n  : ';[1:a][2:a]amix=inputs=2:weights=1 0.20[aout]';\n\nconst ffmpegCmd = `#!/bin/bash\nset -e\n\nPROJECT_DIR=\"${projectDir}\"\nOUTPUT=\"${outputFile}\"\n\n# Write concat file for visuals\ncat > \"${concatFile}\" << 'CONCAT_EOF'\n${concatLines}\nCONCAT_EOF\n\n# Write music concat\ncat > \"${musicMixFile}\" << 'MUSIC_EOF'\n${musicLines}\nMUSIC_EOF\n\n# Assemble music track\nffmpeg -y -f concat -safe 0 -i \"${musicMixFile}\" -c:a libmp3lame -q:a 4 \"${projectDir}/audio/music_combined.mp3\"\n\n# Final assembly: visuals + voiceover + music + sfx\nffmpeg -y \\\\\n  -f concat -safe 0 -i \"${concatFile}\" \\\\\n  -i \"${manifest.voiceover}\" \\\\\n  -i \"${projectDir}/audio/music_combined.mp3\" \\\\\n  ${sfxInputs} \\\\\n  -filter_complex \"[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30[vout]${sfxMixFilter}\" \\\\\n  -map \"[vout]\" -map \"[aout]\" \\\\\n  -c:v libx264 -crf 18 -preset slow -profile:v high \\\\\n  -c:a aac -b:a 192k -ar 48000 \\\\\n  -movflags +faststart \\\\\n  -t $(ffprobe -v quiet -show_entries format=duration -of csv=p=0 \"${manifest.voiceover}\") \\\\\n  \"$OUTPUT\"\n\necho \"Assembly complete: $OUTPUT\"\n`;\n\nreturn [{ json: { ffmpegScript: ffmpegCmd, outputFile, scriptPath: `${projectDir}/scripts/assemble.sh`, projectDir, TOPIC: manifest.topic } }];"
+        },
+        "id": "node-42-ffmpeg-script",
+        "name": "Generate FFMpeg Assembly Script",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6000,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "command": "={{ \"cat > \\\"\" + $json.scriptPath + \"\\\" << 'RUINS_EOF'\\n\" + $json.ffmpegScript + \"\\nRUINS_EOF\\nchmod +x \\\"\" + $json.scriptPath + \"\\\"\\necho \\\"Assembly script written to: \" + $json.scriptPath + \"\\\"\" }}"
+        },
+        "id": "node-43-write-ffmpeg",
+        "name": "Write Assembly Script",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          6240,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "command": "={{ \"bash \\\"\" + $json.scriptPath + \"\\\" 2>&1\" }}"
+        },
+        "id": "node-44-run-ffmpeg",
+        "name": "Assemble Final Video — FFMpeg",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          6480,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "node-45-done",
+        "name": "Production Complete",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3,
+        "position": [
+          6720,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $input.item.json;\nconst prompts = d.imagePrompts || [];\nreturn prompts.map((p, i) => {\n  const rowNum = i + 1;\n  const promptJson = typeof p.nb2_prompt === 'object'\n    ? JSON.stringify(p.nb2_prompt)\n    : (p.nb2_prompt || '');\n  return {\n    json: {\n      'Index':    rowNum,\n      'Type':     'Image',\n      'Prompt':   '\"' + promptJson + '\"',\n      'Filename': 'image_' + String(rowNum).padStart(4, '0')\n    }\n  };\n});"
+        },
+        "id": "node-22-expand-images",
+        "name": "Expand Image Prompts",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4320,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const parsedData = $('Parse Asset Prompts').item.json;\nconst prompts = parsedData.videoPrompts || [];\nreturn prompts.map((p, i) => {\n  const rowNum = i + 1;\n  const promptText = p.veo_prompt || '';\n  return {\n    json: {\n      'Index':    rowNum,\n      'Type':     'Video',\n      'Prompt':   '\"' + promptText + '\"',\n      'Filename': 'video_' + String(rowNum).padStart(4, '0')\n    }\n  };\n});"
+        },
+        "id": "node-24-expand-videos",
+        "name": "Expand Video Prompts",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5040,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $input.item.json;\nconst prompts = d.musicPrompts || [];\nreturn prompts.map(p => ({ json: { ...p, projectDir: d.projectDir } }));"
+        },
+        "id": "node-26-expand-music",
+        "name": "Expand Music Prompts",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4320,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $input.item.json;\nconst prompts = d.sfxPrompts || [];\nreturn prompts.map(p => ({ json: { ...p, projectDir: d.projectDir } }));"
+        },
+        "id": "node-27-expand-sfx",
+        "name": "Expand SFX Prompts",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4320,
+          800
+        ]
+      },
+      {
+        "parameters": {
+          "resume": "form",
+          "formTitle": "Ruins Untold — Manual Generation Ready?",
+          "formDescription": "={{ '**Prompt files written to project folder:**\\n\\n📄 `' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/image_prompts.xlsx`\\n📄 `' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/video_prompts.xlsx`\\n\\n**Generate your images and videos using those prompts, then place the files here:**\\n\\n🖼️  Images → `' + $('Parse Asset Prompts').item.json.projectDir + '/images/` (filenames: img_0001.png, img_0002.png…)\\n🎬  Videos → `' + $('Parse Asset Prompts').item.json.projectDir + '/videos/` (filenames: vid_0001.mp4, vid_0002.mp4…)\\n\\n**Music and SFX are being auto-generated in parallel** — wait for this form to appear before submitting, as that confirms both audio tracks are ready.\\n\\nSubmit once all image and video files are in place.' }}",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "Confirmation",
+                "fieldType": "dropdown",
+                "fieldOptions": {
+                  "values": [
+                    {
+                      "option": "All files are in place — proceed to assembly"
+                    },
+                    {
+                      "option": "Not ready yet — cancel"
+                    }
+                  ]
+                },
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Notes",
+                "fieldType": "textarea",
+                "placeholder": "Any files skipped or renamed?"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "node-38b-manual-wait",
+        "name": "Wait — Manual Image & Video Generation",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1,
+        "position": [
+          5760,
+          304
+        ],
+        "webhookId": "ruins-manual-generation-wait"
+      },
+      {
+        "parameters": {
+          "operation": "toFile",
+          "fileFormat": "xlsx",
+          "options": {
+            "fileName": "image_prompts",
+            "headerRow": true,
+            "sheetName": "Image Prompts"
+          }
+        },
+        "id": "node-23-xlsx-images",
+        "name": "Write Image Prompts — XLSX",
+        "type": "n8n-nodes-base.spreadsheetFile",
+        "typeVersion": 2,
+        "position": [
+          4560,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/scripts/image_prompts.xlsx",
+          "options": {}
+        },
+        "id": "node-23b-save-image-xlsx",
+        "name": "Save Image Prompts File",
+        "type": "n8n-nodes-base.writeBinaryFile",
+        "typeVersion": 1,
+        "position": [
+          4800,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "toFile",
+          "fileFormat": "xlsx",
+          "options": {
+            "fileName": "video_prompts",
+            "headerRow": true,
+            "sheetName": "Video Prompts"
+          }
+        },
+        "id": "node-25-xlsx-videos",
+        "name": "Write Video Prompts — XLSX",
+        "type": "n8n-nodes-base.spreadsheetFile",
+        "typeVersion": 2,
+        "position": [
+          5280,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/scripts/video_prompts.xlsx",
+          "options": {}
+        },
+        "id": "node-25b-save-video-xlsx",
+        "name": "Save Video Prompts File",
+        "type": "n8n-nodes-base.writeBinaryFile",
+        "typeVersion": 1,
+        "position": [
+          5520,
+          144
+        ]
+      }
+    ],
+    "connections": {
+      "Video Topic Form": {
+        "main": [
+          [
+            {
+              "node": "Set Project Variables",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set Project Variables": {
+        "main": [
+          [
+            {
+              "node": "Create Project Directories",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Project Directories": {
+        "main": [
+          [
+            {
+              "node": "Generate Script — Claude",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate Script — Claude": {
+        "main": [
+          [
+            {
+              "node": "Parse Script Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Script Response": {
+        "main": [
+          [
+            {
+              "node": "Save Script to File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Script to File": {
+        "main": [
+          [
+            {
+              "node": "Script Review & Approval",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Script Review & Approval": {
+        "main": [
+          [
+            {
+              "node": "Script Approved?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Script Approved?": {
+        "main": [
+          [
+            {
+              "node": "Generate Voiceover — ElevenLabs",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Revise Script — Claude",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Revise Script — Claude": {
+        "main": [
+          [
+            {
+              "node": "Parse Revised Script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Revised Script": {
+        "main": [
+          [
+            {
+              "node": "Save Revised Script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Revised Script": {
+        "main": [
+          [
+            {
+              "node": "Script Review & Approval",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate Voiceover — ElevenLabs": {
+        "main": [
+          [
+            {
+              "node": "Save Voiceover File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Voiceover File": {
+        "main": [
+          [
+            {
+              "node": "Voiceover Review & Approval",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Voiceover Review & Approval": {
+        "main": [
+          [
+            {
+              "node": "Voiceover Approved?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Voiceover Approved?": {
+        "main": [
+          [
+            {
+              "node": "Analyze Media Placement — Claude",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Generate Voiceover — ElevenLabs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analyze Media Placement — Claude": {
+        "main": [
+          [
+            {
+              "node": "Generate Asset Prompts — Claude",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate Asset Prompts — Claude": {
+        "main": [
+          [
+            {
+              "node": "Parse Asset Prompts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Asset Prompts": {
+        "main": [
+          [
+            {
+              "node": "Save Prompts File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Prompts File": {
+        "main": [
+          [
+            {
+              "node": "Prompts Review & Approval",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prompts Review & Approval": {
+        "main": [
+          [
+            {
+              "node": "Prompts Approved?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prompts Approved?": {
+        "main": [
+          [
+            {
+              "node": "Expand Image Prompts",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Expand Music Prompts",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Expand SFX Prompts",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Generate Asset Prompts — Claude",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Music Prompts": {
+        "main": [
+          [
+            {
+              "node": "Generate Music — ElevenLabs",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "All Assets Complete",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Generate Music — ElevenLabs": {
+        "main": [
+          [
+            {
+              "node": "Save Music File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Music File": {
+        "main": [
+          [
+            {
+              "node": "Split Music Prompts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split SFX Prompts": {
+        "main": [
+          [
+            {
+              "node": "Generate SFX — ElevenLabs",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "All Assets Complete",
+              "type": "main",
+              "index": 2
+            }
+          ]
+        ]
+      },
+      "Generate SFX — ElevenLabs": {
+        "main": [
+          [
+            {
+              "node": "Save SFX File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save SFX File": {
+        "main": [
+          [
+            {
+              "node": "Split SFX Prompts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "All Assets Complete": {
+        "main": [
+          [
+            {
+              "node": "Wait — Manual Image & Video Generation",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Asset Manifest": {
+        "main": [
+          [
+            {
+              "node": "Assets Review & Final Approval",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Assets Review & Final Approval": {
+        "main": [
+          [
+            {
+              "node": "Assets Approved?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Assets Approved?": {
+        "main": [
+          [
+            {
+              "node": "Generate FFMpeg Assembly Script",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Generate FFMpeg Assembly Script": {
+        "main": [
+          [
+            {
+              "node": "Write Assembly Script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Write Assembly Script": {
+        "main": [
+          [
+            {
+              "node": "Assemble Final Video — FFMpeg",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Assemble Final Video — FFMpeg": {
+        "main": [
+          [
+            {
+              "node": "Production Complete",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Expand Image Prompts": {
+        "main": [
+          [
+            {
+              "node": "Write Image Prompts — XLSX",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Expand Video Prompts": {
+        "main": [
+          [
+            {
+              "node": "Write Video Prompts — XLSX",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Expand Music Prompts": {
+        "main": [
+          [
+            {
+              "node": "Split Music Prompts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Expand SFX Prompts": {
+        "main": [
+          [
+            {
+              "node": "Split SFX Prompts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait — Manual Image & Video Generation": {
+        "main": [
+          [
+            {
+              "node": "Build Asset Manifest",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Write Image Prompts — XLSX": {
+        "main": [
+          [
+            {
+              "node": "Save Image Prompts File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Image Prompts File": {
+        "main": [
+          [
+            {
+              "node": "Expand Video Prompts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Write Video Prompts — XLSX": {
+        "main": [
+          [
+            {
+              "node": "Save Video Prompts File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save Video Prompts File": {
+        "main": [
+          [
+            {
+              "node": "All Assets Complete",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "JeezyAndNay Neal",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-20T20:00:18.002Z",
+        "id": 6,
+        "workflowId": "ruins-untold-pipeline-v1",
+        "versionId": "cdb675c3-069b-48ec-8124-e69d4dcc6c20",
+        "event": "deactivated",
+        "userId": "af2abf74-a4e9-4319-875f-87671c53e774"
+      },
+      {
+        "createdAt": "2026-05-20T20:00:18.247Z",
+        "id": 7,
+        "workflowId": "ruins-untold-pipeline-v1",
+        "versionId": "cdb675c3-069b-48ec-8124-e69d4dcc6c20",
+        "event": "activated",
+        "userId": "af2abf74-a4e9-4319-875f-87671c53e774"
+      }
+    ]
+  }
+}
