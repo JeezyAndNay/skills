@@ -81,26 +81,28 @@
       "webhookId": "ruins-untold-topic-select",
       "parameters": {
         "resume": "form",
-        "formTitle": "Ruins Untold — Select Episode Topic",
-        "formDescription": "={{ 'Available topics from Ruins_Untold_Ideas:\\n\\n' + $json.topicList + '\\n\\nEnter the number of the topic you want to develop.' }}",
+        "formTitle": "RUINS UNTOLD — CASE FILE SELECTION",
+        "formDescription": "={{ 'CLASSIFIED — INTERNAL PRODUCTION USE ONLY\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'OPEN CASE FILES — STATUS: NEW\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n'+ $json.topicList+ '\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'Enter the case number to open for production.' }}",
         "responseMode": "lastNode",
         "formFields": {
           "values": [
             {
-              "fieldLabel": "Selection",
+              "fieldLabel": "CASE NUMBER",
               "fieldType": "number",
               "placeholder": "1",
               "requiredField": true
             },
             {
-              "fieldLabel": "VOICE_ID",
+              "fieldLabel": "VOICE PROFILE ID",
               "fieldType": "text",
-              "placeholder": "ElevenLabs voice ID (leave blank to use channel default)",
+              "placeholder": "ElevenLabs voice ID — leave blank to use channel default",
               "requiredField": false
             }
           ]
         },
-        "options": {}
+        "options": {
+          "formLayout": "wide"
+        }
       }
     },
     {
@@ -281,33 +283,35 @@
     {
       "parameters": {
         "resume": "form",
-        "formTitle": "Ruins Untold — Script Review",
-        "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**ESTIMATED LENGTH:** ~' + $json.estimatedMinutes + ' minutes\\n\\n**SCRIPT PREVIEW (first 3000 chars):**\\n```\\n' + ($json.scriptText || '').substring(0, 3000) + '\\n```\\n\\n**Full script saved at:** `' + $json.projectDir + '/scripts/full_output.md`\\n\\nReview the full script before approving.' }}",
+        "formTitle": "RUINS UNTOLD — SCRIPT AUTHORIZATION",
+        "formDescription": "={{ 'CASE FILE: ' + $json.TOPIC + '\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'ESTIMATED RUNTIME: ~' + $json.estimatedMinutes + ' minutes\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n'+ 'SCRIPT EXCERPT (first 3000 characters):\\n\\n'+ ($json.scriptText || '').substring(0, 3000)+ '\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'FULL SCRIPT → ' + $json.projectDir + '/scripts/full_output.md\\n'+ 'Review the complete document before issuing authorization.'  }}",
         "formFields": {
           "values": [
             {
-              "fieldLabel": "Decision",
+              "fieldLabel": "AUTHORIZATION",
               "fieldType": "dropdown",
               "fieldOptions": {
                 "values": [
                   {
-                    "option": "approve"
+                    "option": "AUTHORIZE — PROCEED TO RECORDING"
                   },
                   {
-                    "option": "revise"
+                    "option": "RETURN — REVISIONS REQUIRED"
                   }
                 ]
               },
               "requiredField": true
             },
             {
-              "fieldLabel": "Revision Notes",
+              "fieldLabel": "REVISION DIRECTIVE",
               "fieldType": "textarea",
-              "placeholder": "What needs to change? (only required if selecting 'revise')"
+              "placeholder": "What must change? Be specific. Required only when returning for revision."
             }
           ]
         },
-        "options": {}
+        "options": {
+          "formLayout": "wide"
+        }
       },
       "id": "node-07-script-review",
       "name": "Script Review & Approval",
@@ -478,33 +482,35 @@
     {
       "parameters": {
         "resume": "form",
-        "formTitle": "Ruins Untold — Voiceover Review",
-        "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**Voiceover file saved at:**\\n`' + $json.projectDir + '/audio/voiceover.mp3`\\n\\nPlease listen to the voiceover before approving. Open the file in any audio player.\\n\\n**Estimated duration:** ~' + $json.estimatedMinutes + ' minutes' }}",
+        "formTitle": "RUINS UNTOLD — TRANSMISSION CLEARANCE",
+        "formDescription": "={{ 'CASE FILE: ' + $json.TOPIC + '\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'ESTIMATED RUNTIME: ~' + $json.estimatedMinutes + ' minutes\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n'+ 'TRANSMISSION FILE:\\n'+ $json.projectDir + '/audio/voiceover.mp3\\n\\n'+ 'Open the file in any audio player and review the full recording\\n'+ 'before issuing clearance. Check pacing, pronunciation, and tone.\\n'+ 'This recording goes to air. Make it right.'  }}",
         "formFields": {
           "values": [
             {
-              "fieldLabel": "Decision",
+              "fieldLabel": "CLEARANCE DECISION",
               "fieldType": "dropdown",
               "fieldOptions": {
                 "values": [
                   {
-                    "option": "approve"
+                    "option": "CLEARED — TRANSMISSION APPROVED"
                   },
                   {
-                    "option": "regenerate"
+                    "option": "REJECTED — RE-RECORD REQUIRED"
                   }
                 ]
               },
               "requiredField": true
             },
             {
-              "fieldLabel": "Regeneration Notes",
+              "fieldLabel": "FIELD NOTES",
               "fieldType": "textarea",
-              "placeholder": "Any issues with pacing, pronunciation, or delivery? (only if regenerating)"
+              "placeholder": "Pacing issues, mispronunciations, tone problems — document them here."
             }
           ]
         },
-        "options": {}
+        "options": {
+          "formLayout": "wide"
+        }
       },
       "id": "node-14-voiceover-review",
       "name": "Voiceover Review & Approval",
@@ -642,33 +648,35 @@
     {
       "parameters": {
         "resume": "form",
-        "formTitle": "Ruins Untold — Asset Prompts Review",
-        "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**Asset counts ready for generation:**\\n- Images (NanoBanana 2): ' + $json.imageTotalCount + '\\n- Videos (Veo 3.1 Fast): ' + $json.videoTotalCount + '\\n- Music cues (ElevenLabs): ' + $json.musicTotalCount + '\\n- SFX cues (ElevenLabs): ' + $json.sfxTotalCount + '\\n\\n**All prompts saved at:**\\n`' + $json.projectDir + '/scripts/asset_prompts.json`\\n\\nReview the prompts file before approving generation. This step commits to API costs.' }}",
+        "formTitle": "RUINS UNTOLD — ASSET AUTHORIZATION",
+        "formDescription": "={{ 'CASE FILE: ' + $json.TOPIC + '\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'ASSETS QUEUED FOR GENERATION:\\n\\n'+ '  IMAGES  (NanoBanana 2)   ' + $json.imageTotalCount + ' prompts\\n'+ '  VIDEOS  (Veo 3.1 Fast)   ' + $json.videoTotalCount + ' prompts\\n'+ '  MUSIC   (ElevenLabs)     ' + $json.musicTotalCount + ' cues\\n'+ '  SFX     (ElevenLabs)     ' + $json.sfxTotalCount + ' cues\\n\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'PROMPT FILE → ' + $json.projectDir + '/scripts/asset_prompts.json\\n\\n'+ 'WARNING: Authorization commits to generation API costs.\\n'+ 'Review the prompt file before proceeding. There is no undo.'  }}",
         "formFields": {
           "values": [
             {
-              "fieldLabel": "Decision",
+              "fieldLabel": "AUTHORIZATION",
               "fieldType": "dropdown",
               "fieldOptions": {
                 "values": [
                   {
-                    "option": "approve — begin generation"
+                    "option": "AUTHORIZE — COMMENCE GENERATION"
                   },
                   {
-                    "option": "revise prompts"
+                    "option": "HOLD — REVISIONS REQUIRED"
                   }
                 ]
               },
               "requiredField": true
             },
             {
-              "fieldLabel": "Revision Notes",
+              "fieldLabel": "REVISION DIRECTIVE",
               "fieldType": "textarea",
-              "placeholder": "Describe any prompt changes needed (only if revising)"
+              "placeholder": "Which prompts need to change and why? Be specific."
             }
           ]
         },
-        "options": {}
+        "options": {
+          "formLayout": "wide"
+        }
       },
       "id": "node-20-prompts-review",
       "name": "Prompts Review & Approval",
@@ -903,33 +911,35 @@
     {
       "parameters": {
         "resume": "form",
-        "formTitle": "Ruins Untold — Final Assets Review",
-        "formDescription": "={{ '**TOPIC:** ' + $json.TOPIC + '\\n\\n**Generated assets are in:** `' + $json.projectDir + '`\\n\\n**Asset summary:**\\n- Images: `' + $json.projectDir + '/images/`\\n- Videos: `' + $json.projectDir + '/videos/`\\n- Music: `' + $json.projectDir + '/music/`\\n- SFX: `' + $json.projectDir + '/sfx/`\\n- Voiceover: `' + $json.projectDir + '/audio/voiceover.mp3`\\n\\nReview all assets before approving FFMpeg assembly. Assembly is the final step.' }}",
+        "formTitle": "RUINS UNTOLD — FINAL CLEARANCE",
+        "formDescription": "={{ 'CASE FILE: ' + $json.TOPIC + '\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'ASSET STAGING DIRECTORY:\\n'+ $json.projectDir + '\\n\\n'+ '  /images/     — visual assets\\n'+ '  /videos/     — motion assets\\n'+ '  /music/      — score\\n'+ '  /sfx/        — sound effects\\n'+ '  /audio/      — voiceover.mp3\\n\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'Review all staged assets before issuing final clearance.\\n'+ 'FFmpeg assembly is the final step — the video cannot be unbuilt.'  }}",
         "formFields": {
           "values": [
             {
-              "fieldLabel": "Decision",
+              "fieldLabel": "FINAL AUTHORIZATION",
               "fieldType": "dropdown",
               "fieldOptions": {
                 "values": [
                   {
-                    "option": "approve — assemble final video"
+                    "option": "EXECUTE — ASSEMBLE FINAL CUT"
                   },
                   {
-                    "option": "hold — do not assemble"
+                    "option": "HOLD — DO NOT ASSEMBLE"
                   }
                 ]
               },
               "requiredField": true
             },
             {
-              "fieldLabel": "Notes",
+              "fieldLabel": "POST-PRODUCTION NOTES",
               "fieldType": "textarea",
-              "placeholder": "Any notes for post-production..."
+              "placeholder": "Any notes for the record before assembly begins..."
             }
           ]
         },
-        "options": {}
+        "options": {
+          "formLayout": "wide"
+        }
       },
       "id": "node-40-assets-review",
       "name": "Assets Review & Final Approval",
@@ -1081,33 +1091,35 @@
     {
       "parameters": {
         "resume": "form",
-        "formTitle": "Ruins Untold — Manual Generation Ready?",
-        "formDescription": "={{ '**Prompt files written to project folder:**\\n\\n📄 `' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/image_prompts.xlsx`\\n📄 `' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/video_prompts.xlsx`\\n\\n**Generate your images and videos using those prompts, then place the files here:**\\n\\n🖼️  Images → `' + $('Parse Asset Prompts').item.json.projectDir + '/images/` (filenames: img_0001.png, img_0002.png…)\\n🎬  Videos → `' + $('Parse Asset Prompts').item.json.projectDir + '/videos/` (filenames: vid_0001.mp4, vid_0002.mp4…)\\n\\n**Music and SFX are being auto-generated in parallel** — wait for this form to appear before submitting, as that confirms both audio tracks are ready.\\n\\nSubmit once all image and video files are in place.' }}",
+        "formTitle": "RUINS UNTOLD — MEDIA STAGING",
+        "formDescription": "={{ 'PROMPT FILES READY — STAGING REQUIRED\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n'+ 'GENERATE FROM THESE FILES:\\n\\n'+ '  ' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/image_prompts.xlsx\\n'+ '  ' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/video_prompts.xlsx\\n\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n\\n'+ 'STAGE COMPLETED FILES HERE:\\n\\n'+ '  IMAGES → ' + $('Parse Asset Prompts').item.json.projectDir + '/images/\\n'+ '          Filenames: img_0001.png  img_0002.png  …\\n\\n'+ '  VIDEOS → ' + $('Parse Asset Prompts').item.json.projectDir + '/videos/\\n'+ '          Filenames: vid_0001.mp4  vid_0002.mp4  …\\n\\n'+ '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n'+ 'Music and SFX are generating in parallel.\\n'+ 'This form appearing confirms both audio tracks are complete.\\n'+ 'Do not submit until all image and video files are staged.'  }}",
         "formFields": {
           "values": [
             {
-              "fieldLabel": "Confirmation",
+              "fieldLabel": "STAGING CONFIRMATION",
               "fieldType": "dropdown",
               "fieldOptions": {
                 "values": [
                   {
-                    "option": "All files are in place — proceed to assembly"
+                    "option": "ALL FILES STAGED — PROCEED TO ASSEMBLY"
                   },
                   {
-                    "option": "Not ready yet — cancel"
+                    "option": "ABORT — FILES NOT READY"
                   }
                 ]
               },
               "requiredField": true
             },
             {
-              "fieldLabel": "Notes",
+              "fieldLabel": "FIELD NOTES",
               "fieldType": "textarea",
-              "placeholder": "Any files skipped or renamed?"
+              "placeholder": "Any files skipped, renamed, or substituted? Document deviations here."
             }
           ]
         },
-        "options": {}
+        "options": {
+          "formLayout": "wide"
+        }
       },
       "id": "node-38b-manual-wait",
       "name": "Wait — Manual Image & Video Generation",
