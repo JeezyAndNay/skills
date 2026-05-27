@@ -177,6 +177,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
+            "ID":               "=ROW()-1",
             "DATE_ADDED":       "={{ $now.format('yyyy-MM-dd') }}",
             "STATUS":           "New",
             "TOPIC":            "={{ $json.topic }}",
@@ -190,6 +191,7 @@
           },
           "matchingColumns": [],
           "schema": [
+            { "id": "ID",           "displayName": "ID",           "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
             { "id": "DATE_ADDED",      "displayName": "DATE_ADDED",      "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
             { "id": "STATUS",          "displayName": "STATUS",          "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
             { "id": "TOPIC",           "displayName": "TOPIC",           "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
