@@ -2016,12 +2016,12 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\n\nconst kieBody = {\n  model:        'V4_5',\n  prompt:       p.prompt || '',\n  customMode:   false,\n  instrumental: true,\n  callBackUrl:  'http://localhost:9999/callback'\n};\n\nreturn [{ json: {\n  ...item,\n  kieBody:    JSON.stringify(kieBody),\n  promptText: kieBody.prompt\n} }];\n"
+        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\n\n// ElevenLabs Sound Generation: synchronous, returns MP3 binary directly\nconst elBody = {\n  text:             p.prompt || '',\n  duration_seconds: p.duration_seconds || 5.0,\n  prompt_influence: 0.3\n};\n\nreturn [{ json: {\n  ...item,\n  elBody:     JSON.stringify(elBody),\n  promptText: elBody.text,\n  filepath:   item.assetDir + '/' + item.filename + '.mp3'\n} }];\n"
       }
     },
     {
       "id": "submit-sfx-kie",
-      "name": "Submit Sfx to Kie.ai",
+      "name": "Submit Sfx to ElevenLabs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
@@ -2030,140 +2030,52 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://api.kie.ai/api/v1/generate",
+        "url": "https://api.elevenlabs.io/v1/sound-generation",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "Content-Type",
-              "value": "application/json"
+              "name": "Accept",
+              "value": "audio/mpeg"
             }
           ]
         },
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ $json.kieBody }}",
+        "body": "={{ $json.elBody }}",
         "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "sfxAudio"
+            }
+          },
           "timeout": 30000
         }
-      }
-    },
-    {
-      "id": "extract-sfx-id",
-      "name": "Extract Sfx Task ID",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        7440,
-        900
-      ],
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "\nconst response = $input.item.json;\nconst meta     = $('Prepare Sfx Request').item.json;\nif (response.code !== 200) {\n  throw new Error(`Kie.ai sfx failed (${meta.filename}): ${response.msg}`);\n}\nreturn [{ json: { ...meta, kieTaskId: response.data.taskId } }];\n"
-      }
-    },
-    {
-      "id": "wait-sfx",
-      "name": "Wait for Sfx",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1,
-      "position": [
-        7680,
-        900
-      ],
-      "parameters": {
-        "resume": "timeInterval",
-        "unit": "seconds",
-        "amount": 15
-      }
-    },
-    {
-      "id": "poll-sfx",
-      "name": "Poll Sfx Status",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        7920,
-        900
-      ],
-      "parameters": {
-        "method": "GET",
-        "url": "=https://api.kie.ai/api/v1/generate/record-info?taskId={{ $('Extract Sfx Task ID').item.json.kieTaskId }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {
-          "timeout": 15000
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "y7U5lql3fiLpT7fn",
+          "name": "ElevenLabs API Key"
         }
-      }
-    },
-    {
-      "id": "complete-sfx",
-      "name": "Sfx Generation Complete?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        8160,
-        900
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "cond-suno-sfx-success",
-              "leftValue": "={{ $json.data.status }}",
-              "rightValue": "SUCCESS",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            },
-            {
-              "id": "cond-suno-sfx-fail",
-              "leftValue": "={{ $json.data.status }}",
-              "rightValue": "FAILED",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "or"
-        }
-      }
-    },
-    {
-      "id": "store-sfx-result",
-      "name": "Store Sfx Result",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        8400,
-        900
-      ],
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "\nconst poll = $input.item.json;\nconst meta = $('Prepare Sfx Request').item.json;\nconst staticData = $getWorkflowStaticData('global');\n\nconst data = poll.data || {};\nif (data.status === 'FAILED') {\n  throw new Error(`${meta.filename} failed: ${data.errorCode} \u2014 ${data.errorMessage}`);\n}\n\nlet responseObj = data.response || {};\nif (typeof responseObj === 'string') {\n  try { responseObj = JSON.parse(responseObj); } catch(e) {}\n}\n\nconst sunoData = responseObj.sunoData || [];\nconst assetUrl = (sunoData[0] || {}).audioUrl || '';\n\nif (!assetUrl) throw new Error(`No URL for ${meta.filename} \u2014 status: ${data.status}`);\n\nstaticData.sfxCost  = (staticData.sfxCost  || 0) + (data.creditsConsumed || 0);\nstaticData.sfxCount = (staticData.sfxCount || 0) + 1;\n\nreturn [{ json: {\n  ...meta,\n  assetUrl,\n  filepath:        meta.assetDir + '/' + meta.filename + '.mp3',\n  creditsConsumed: data.creditsConsumed || 0\n} }];\n"
       }
     },
     {
       "id": "save-sfx-file",
       "name": "Save Sfx File",
-      "type": "n8n-nodes-base.executeCommand",
+      "type": "n8n-nodes-base.writeBinaryFile",
       "typeVersion": 1,
       "position": [
-        8640,
+        7440,
         900
       ],
       "parameters": {
-        "command": "={{ 'mkdir -p \"' + $json.assetDir + '\" && curl -fsSL -o \"' + $json.filepath + '\" \"' + $json.assetUrl + '\" && echo \"\u2713 ' + $json.filename + '.mp3\"' }}"
+        "fileName": "={{ $('Prepare Sfx Request').item.json.filepath }}",
+        "dataPropertyName": "sfxAudio",
+        "options": {}
       }
     },
     {
@@ -3348,7 +3260,7 @@
       "main": [
         [
           {
-            "node": "Submit Sfx to Kie.ai",
+            "node": "Submit Sfx to ElevenLabs",
             "type": "main",
             "index": 0
           }
@@ -3356,77 +3268,7 @@
       ]
     },
     "Submit Sfx to Kie.ai": {
-      "main": [
-        [
-          {
-            "node": "Extract Sfx Task ID",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract Sfx Task ID": {
-      "main": [
-        [
-          {
-            "node": "Wait for Sfx",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait for Sfx": {
-      "main": [
-        [
-          {
-            "node": "Poll Sfx Status",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Poll Sfx Status": {
-      "main": [
-        [
-          {
-            "node": "Sfx Generation Complete?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Sfx Generation Complete?": {
-      "main": [
-        [
-          {
-            "node": "Store Sfx Result",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Wait for Sfx",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Store Sfx Result": {
-      "main": [
-        [
-          {
-            "node": "Save Sfx File",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": []
     },
     "Save Sfx File": {
       "main": [
@@ -3444,6 +3286,17 @@
         [
           {
             "node": "Prompts Review & Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Sfx to ElevenLabs": {
+      "main": [
+        [
+          {
+            "node": "Save Sfx File",
             "type": "main",
             "index": 0
           }
