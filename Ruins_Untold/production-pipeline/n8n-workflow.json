@@ -1204,21 +1204,30 @@
           "options": {
             "caseSensitive": false,
             "leftValue": "",
-            "typeValidation": "strict",
+            "typeValidation": "loose",
             "version": 1
           },
           "conditions": [
             {
-              "id": "cond-kieai-done",
+              "id": "cond-kieai-success",
               "leftValue": "={{ $json.data.state }}",
               "rightValue": "success",
               "operator": {
                 "type": "string",
                 "operation": "equals"
               }
+            },
+            {
+              "id": "cond-kieai-fail",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "fail",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
         "options": {}
       }
@@ -1233,7 +1242,7 @@
         600
       ],
       "parameters": {
-        "jsCode": "\nconst pollResponse = $input.item.json;\nconst chunkMeta    = $('Prepare Chunk Request').item.json;\nconst staticData   = $getWorkflowStaticData('global');\n\n// Parse resultJson to find ElevenLabs request_id if exposed\nlet resultJson = {};\ntry {\n  resultJson = JSON.parse(pollResponse.data.resultJson || '{}');\n} catch(e) {}\n\n// ElevenLabs history_item_id is the value to chain as previous_request_ids\n// Kie.ai may expose it in resultJson; fallback to taskId\nconst requestId =\n  resultJson.request_id     ||\n  resultJson.history_item_id||\n  resultJson.requestId      ||\n  $('Extract Task ID').item.json.kieTaskId;  // fallback: taskId\n\n// Chain into static data (max 3, ElevenLabs limit)\nif (!staticData.ruinsVoicePrevIds) staticData.ruinsVoicePrevIds = [];\nstaticData.ruinsVoicePrevIds.push(requestId);\nif (staticData.ruinsVoicePrevIds.length > 3) {\n  staticData.ruinsVoicePrevIds = staticData.ruinsVoicePrevIds.slice(-3);\n}\n\nconst audioUrl = (pollResponse.data.resultUrls || [])[0] || '';\n\nif (!audioUrl) {\n  throw new Error(`Chunk ${chunkMeta.chunkNumber}: no audio URL in kie.ai response`);\n}\n\nreturn [{\n  json: {\n    ...chunkMeta,\n    kieRequestId: requestId,\n    audioUrl:     audioUrl,\n    chainedIds:   [...staticData.ruinsVoicePrevIds]\n  }\n}];\n"
+        "jsCode": "\nconst pollResponse = $input.item.json;\nconst chunkMeta    = $('Prepare Chunk Request').item.json;\nconst staticData   = $getWorkflowStaticData('global');\n\n// Parse resultJson \u2014 URL lives here: { resultUrls: [\"https://...\"] }\nlet resultJson = {};\ntry {\n  resultJson = JSON.parse(pollResponse.data.resultJson || '{}');\n} catch(e) {}\n\n// Extract ElevenLabs request_id for voice continuity chaining\nconst requestId =\n  resultJson.request_id      ||\n  resultJson.history_item_id ||\n  resultJson.requestId       ||\n  $('Extract Task ID').item.json.kieTaskId;\n\n// Update chained IDs (max 3)\nif (!staticData.ruinsVoicePrevIds) staticData.ruinsVoicePrevIds = [];\nstaticData.ruinsVoicePrevIds.push(requestId);\nif (staticData.ruinsVoicePrevIds.length > 3) {\n  staticData.ruinsVoicePrevIds = staticData.ruinsVoicePrevIds.slice(-3);\n}\n\n// URL is inside resultJson.resultUrls (not data.resultUrls)\nconst audioUrl =\n  (resultJson.resultUrls || [])[0] ||\n  (pollResponse.data.resultUrls || [])[0] ||\n  '';\n\nif (!audioUrl) {\n  throw new Error(`Chunk ${chunkMeta.chunkNumber}: no audio URL in kie.ai response. state=${pollResponse.data.state} resultJson=${pollResponse.data.resultJson}`);\n}\n\nreturn [{\n  json: {\n    ...chunkMeta,\n    kieRequestId: requestId,\n    audioUrl:     audioUrl,\n    chainedIds:   [...staticData.ruinsVoicePrevIds]\n  }\n}];\n"
       }
     },
     {
