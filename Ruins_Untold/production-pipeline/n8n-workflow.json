@@ -977,7 +977,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:3333",
+        "url": "http://host.docker.internal:3333/generate",
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
