@@ -116,7 +116,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const input = $input.item.json;\n\n// Compute timestamp once \u2014 used in both slug and dir\nconst ts   = new Date().toISOString().replace(/[^0-9]/g, '').substring(0, 12);\nconst slug = (input.TOPIC || '')\n  .toLowerCase()\n  .replace(/[^a-z0-9]+/g, '_')\n  .substring(0, 40)\n  + '_' + ts;\n\nreturn [{\n  json: {\n    TOPIC:                  input.TOPIC           || '',\n    ANGLE:                  input.ANGLE           || '',\n    KEY_EVIDENCE:           input.KEY_EVIDENCE    || '',\n    KEY_RESEARCHERS:        input.KEY_RESEARCHERS || '',\n    RELATED_VIDEO:          input.RELATED_VIDEO   || 'N/A',\n    HOOK_STYLE:             input.HOOK_STYLE      || 'contradiction',\n    TONE_DIAL:              parseInt(input.TONE_DIAL, 10) || 7,\n    VOICE_ID:               input.VOICE_ID        || '',\n    projectSlug:            slug,\n    projectDir:             '/Users/jneal/n8n_projects/' + slug,\n    revisionNotes:          '',\n    testMode:               true\n    voiceoverRevisionNotes: ''\n  }\n}];\n"
+        "jsCode": "const input = $input.item.json;\n\n// Compute timestamp once \u2014 used in both slug and dir\nconst ts   = new Date().toISOString().replace(/[^0-9]/g, '').substring(0, 12);\nconst slug = (input.TOPIC || '')\n  .toLowerCase()\n  .replace(/[^a-z0-9]+/g, '_')\n  .substring(0, 40)\n  + '_' + ts;\n\nreturn [{\n  json: {\n    TOPIC:                  input.TOPIC           || '',\n    ANGLE:                  input.ANGLE           || '',\n    KEY_EVIDENCE:           input.KEY_EVIDENCE    || '',\n    KEY_RESEARCHERS:        input.KEY_RESEARCHERS || '',\n    RELATED_VIDEO:          input.RELATED_VIDEO   || 'N/A',\n    HOOK_STYLE:             input.HOOK_STYLE      || 'contradiction',\n    TONE_DIAL:              parseInt(input.TONE_DIAL, 10) || 7,\n    VOICE_ID:               input.VOICE_ID        || '',\n    projectSlug:            slug,\n    projectDir:             '/Users/jneal/n8n_projects/' + slug,\n    revisionNotes:          '',\n    voiceoverRevisionNotes: ''\n  }\n}];\n"
       },
       "id": "node-02-set-vars",
       "name": "Set Project Variables",
@@ -1313,39 +1313,6 @@
       }
     },
     {
-      "id": "test-mode-if",
-      "name": "Test Mode?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        2520,
-        304
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "cond-testmode",
-              "leftValue": "={{ $('Set Project Variables').item.json.testMode }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      }
-    },
-    {
       "id": "build-mock-cmd",
       "name": "Build Mock Command",
       "type": "n8n-nodes-base.code",
@@ -1886,7 +1853,7 @@
       "main": [
         [
           {
-            "node": "Test Mode?",
+            "node": "Build Mock Command",
             "type": "main",
             "index": 0
           }
@@ -2088,24 +2055,6 @@
         [
           {
             "node": "Parse & Chunk Voiceover",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Test Mode?": {
-      "main": [
-        [
-          {
-            "node": "Build Mock Command",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Expand Chunk Items",
             "type": "main",
             "index": 0
           }
