@@ -1,0 +1,33 @@
+name: Sync catalog workflow to n8n
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Ruins_Untold/catalog/n8n-workflow.json'
+
+jobs:
+  sync:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push workflow to n8n
+        env:
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          N8N_WORKFLOW_ID: ${{ secrets.N8N_WORKFLOW_ID }}
+        run: |
+          python3 -c "
+import json, os
+with open('Ruins_Untold/catalog/n8n-workflow.json') as f:
+    w = json.load(f)
+w['id'] = os.environ['N8N_WORKFLOW_ID']
+print(json.dumps(w))
+" | curl -sf -X PUT \
+            "http://localhost:5678/api/v1/workflows/${N8N_WORKFLOW_ID}" \
+            -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d @- \
+          && echo "Workflow synced to n8n" \
+          || (echo "Sync failed" && exit 1)
