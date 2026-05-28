@@ -1829,7 +1829,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\nconst kieInput = {\n  prompt:           p.prompt || '',\n  duration_seconds: p.duration_seconds || 30\n};\nreturn [{ json: {\n  ...item,\n  kieBody: JSON.stringify({ model: 'PLACEHOLDER_SUNO_MODEL', input: kieInput }),\n  promptText: kieInput.prompt\n} }];\n"
+        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\n\n// Suno API: flat body, no 'input' wrapper\nconst kieBody = {\n  model:        'V4_5',\n  prompt:       p.prompt || '',\n  customMode:   false,\n  instrumental: true          // background music \u2014 no vocals\n};\n\n// Optional style hint if the prompt object includes one\nif (p.style) kieBody.style = p.style;\n\nreturn [{ json: {\n  ...item,\n  kieBody:    JSON.stringify(kieBody),\n  promptText: kieBody.prompt\n} }];\n"
       }
     },
     {
@@ -1843,7 +1843,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "url": "https://api.kie.ai/api/v1/generate",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -1965,7 +1965,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst poll    = $input.item.json;\nconst meta    = $('Prepare Music Request').item.json;\nconst staticData = $getWorkflowStaticData('global');\n\nlet resultJson = {};\ntry { resultJson = JSON.parse(poll.data.resultJson || '{}'); } catch(e) {}\n\nconst assetUrl = (resultJson.resultUrls || [])[0] || '';\nif (!assetUrl) throw new Error(`No URL for ${meta.filename} \u2014 state: ${poll.data.state}`);\n\nstaticData.musicCost = (staticData.musicCost || 0) + (poll.data.creditsConsumed || 0);\nstaticData.musicCount  = (staticData.musicCount  || 0) + 1;\n\nreturn [{ json: {\n  ...meta,\n  assetUrl,\n  filepath:        meta.assetDir + '/' + meta.filename + '.mp3',\n  creditsConsumed: poll.data.creditsConsumed || 0\n} }];\n"
+        "jsCode": "\nconst poll    = $input.item.json;\nconst meta    = $('Prepare Music Request').item.json;\nconst staticData = $getWorkflowStaticData('global');\n\nlet resultJson = {};\ntry { resultJson = JSON.parse(poll.data.resultJson || '{}'); } catch(e) {}\n\n// Suno returns data[0].audio_url; fallback to resultUrls[0]\nconst assetUrl =\n  (resultJson.resultUrls || [])[0] ||\n  ((resultJson.data || [])[0] || {}).audio_url ||\n  '';\n\nif (!assetUrl) throw new Error(`No URL for ${meta.filename} \u2014 state: ${poll.data.state}`);\n\nstaticData.musicCost  = (staticData.musicCost  || 0) + (poll.data.creditsConsumed || 0);\nstaticData.musicCount = (staticData.musicCount || 0) + 1;\n\nreturn [{ json: {\n  ...meta,\n  assetUrl,\n  filepath:        meta.assetDir + '/' + meta.filename + '.mp3',\n  creditsConsumed: poll.data.creditsConsumed || 0\n} }];\n"
       }
     },
     {
@@ -2020,7 +2020,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\nconst kieInput = {\n  prompt:           p.prompt || '',\n  duration_seconds: p.duration_seconds || 30\n};\nreturn [{ json: {\n  ...item,\n  kieBody: JSON.stringify({ model: 'PLACEHOLDER_SUNO_MODEL', input: kieInput }),\n  promptText: kieInput.prompt\n} }];\n"
+        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\n\n// Suno API: flat body, no 'input' wrapper\nconst kieBody = {\n  model:        'V4_5',\n  prompt:       p.prompt || '',\n  customMode:   false,\n  instrumental: true          // SFX \u2014 always no vocals\n};\n\nreturn [{ json: {\n  ...item,\n  kieBody:    JSON.stringify(kieBody),\n  promptText: kieBody.prompt\n} }];\n"
       }
     },
     {
@@ -2034,7 +2034,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "url": "https://api.kie.ai/api/v1/generate",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -2156,7 +2156,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst poll    = $input.item.json;\nconst meta    = $('Prepare Sfx Request').item.json;\nconst staticData = $getWorkflowStaticData('global');\n\nlet resultJson = {};\ntry { resultJson = JSON.parse(poll.data.resultJson || '{}'); } catch(e) {}\n\nconst assetUrl = (resultJson.resultUrls || [])[0] || '';\nif (!assetUrl) throw new Error(`No URL for ${meta.filename} \u2014 state: ${poll.data.state}`);\n\nstaticData.sfxCost = (staticData.sfxCost || 0) + (poll.data.creditsConsumed || 0);\nstaticData.sfxCount  = (staticData.sfxCount  || 0) + 1;\n\nreturn [{ json: {\n  ...meta,\n  assetUrl,\n  filepath:        meta.assetDir + '/' + meta.filename + '.mp3',\n  creditsConsumed: poll.data.creditsConsumed || 0\n} }];\n"
+        "jsCode": "\nconst poll    = $input.item.json;\nconst meta    = $('Prepare Sfx Request').item.json;\nconst staticData = $getWorkflowStaticData('global');\n\nlet resultJson = {};\ntry { resultJson = JSON.parse(poll.data.resultJson || '{}'); } catch(e) {}\n\n// Suno returns data[0].audio_url; fallback to resultUrls[0]\nconst assetUrl =\n  (resultJson.resultUrls || [])[0] ||\n  ((resultJson.data || [])[0] || {}).audio_url ||\n  '';\n\nif (!assetUrl) throw new Error(`No URL for ${meta.filename} \u2014 state: ${poll.data.state}`);\n\nstaticData.sfxCost  = (staticData.sfxCost  || 0) + (poll.data.creditsConsumed || 0);\nstaticData.sfxCount = (staticData.sfxCount || 0) + 1;\n\nreturn [{ json: {\n  ...meta,\n  assetUrl,\n  filepath:        meta.assetDir + '/' + meta.filename + '.mp3',\n  creditsConsumed: poll.data.creditsConsumed || 0\n} }];\n"
       }
     },
     {
