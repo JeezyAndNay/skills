@@ -20,7 +20,7 @@ jobs:
           N8N_WORKFLOW_ID: ${{ secrets.N8N_WORKFLOW_ID }}
         run: |
           echo "Building payload..."
-          PAYLOAD=$(python3 -c "import json,sys,os; w=json.load(open('Ruins_Untold/catalog/n8n-workflow.json')); print(json.dumps(w))")
+          PAYLOAD=$(python3 -c "import json,os; w=json.load(open('Ruins_Untold/catalog/n8n-workflow.json')); w.pop('id', None); print(json.dumps(w))")
 
           echo "Sending to n8n (workflow ID: ${N8N_WORKFLOW_ID})..."
           HTTP_CODE=$(curl -s -o /tmp/n8n_response.json -w "%{http_code}" -X PUT \
