@@ -1,6 +1,7 @@
 name: Sync catalog workflow to n8n
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
