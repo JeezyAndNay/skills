@@ -575,166 +575,6 @@
     },
     {
       "parameters": {
-        "options": {}
-      },
-      "id": "node-32-split-music",
-      "name": "Split Music Prompts",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        5280,
-        608
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.elevenlabs.io/v1/sound-generation",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "xi-api-key",
-              "value": "={{ $credentials.httpHeaderAuth.value }}"
-            },
-            {
-              "name": "content-type",
-              "value": "application/json"
-            },
-            {
-              "name": "accept",
-              "value": "audio/mpeg"
-            }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ text: $json.prompt, duration_seconds: $json.duration_seconds || 30, prompt_influence: 0.5 }) }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "file",
-              "outputPropertyName": "audioData"
-            }
-          },
-          "timeout": 120000
-        }
-      },
-      "id": "node-33-gen-music",
-      "name": "Generate Music \u2014 ElevenLabs",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        5520,
-        608
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "elevenlabs-api-key",
-          "name": "ElevenLabs API Key"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/music/{{ $json.filename }}",
-        "dataPropertyName": "audioData",
-        "options": {}
-      },
-      "id": "node-34-save-music",
-      "name": "Save Music File",
-      "type": "n8n-nodes-base.writeBinaryFile",
-      "typeVersion": 1,
-      "position": [
-        5760,
-        608
-      ]
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "id": "node-35-split-sfx",
-      "name": "Split SFX Prompts",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        5280,
-        800
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.elevenlabs.io/v1/sound-generation",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "xi-api-key",
-              "value": "={{ $credentials.httpHeaderAuth.value }}"
-            },
-            {
-              "name": "content-type",
-              "value": "application/json"
-            },
-            {
-              "name": "accept",
-              "value": "audio/mpeg"
-            }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ text: $json.prompt, duration_seconds: $json.duration_seconds || 5, prompt_influence: 0.6 }) }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "file",
-              "outputPropertyName": "audioData"
-            }
-          },
-          "timeout": 120000
-        }
-      },
-      "id": "node-36-gen-sfx",
-      "name": "Generate SFX \u2014 ElevenLabs",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        5520,
-        800
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "elevenlabs-api-key",
-          "name": "ElevenLabs API Key"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "fileName": "={{ $('Parse Asset Prompts').item.json.projectDir }}/sfx/{{ $json.filename }}",
-        "dataPropertyName": "audioData",
-        "options": {}
-      },
-      "id": "node-37-save-sfx",
-      "name": "Save SFX File",
-      "type": "n8n-nodes-base.writeBinaryFile",
-      "typeVersion": 1,
-      "position": [
-        5760,
-        800
-      ]
-    },
-    {
-      "parameters": {
         "mode": "waitForAll",
         "options": {}
       },
@@ -943,8 +783,8 @@
     {
       "parameters": {
         "resume": "form",
-        "formTitle": "RUINS UNTOLD \u2014 MEDIA STAGING",
-        "formDescription": "={{ 'PROMPT FILES READY \u2014 STAGING REQUIRED\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n'+ 'GENERATE FROM THESE FILES:\\n\\n'+ '  ' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/image_prompts.xlsx\\n'+ '  ' + $('Parse Asset Prompts').item.json.projectDir + '/scripts/video_prompts.xlsx\\n\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n'+ 'STAGE COMPLETED FILES HERE:\\n\\n'+ '  IMAGES \u2192 ' + $('Parse Asset Prompts').item.json.projectDir + '/images/\\n'+ '          Filenames: img_0001.png  img_0002.png  \u2026\\n\\n'+ '  VIDEOS \u2192 ' + $('Parse Asset Prompts').item.json.projectDir + '/videos/\\n'+ '          Filenames: vid_0001.mp4  vid_0002.mp4  \u2026\\n\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'Music and SFX are generating in parallel.\\n'+ 'This form appearing confirms both audio tracks are complete.\\n'+ 'Do not submit until all image and video files are staged.'  }}",
+        "formTitle": "RUINS UNTOLD \u2014 MANUAL MEDIA GENERATION",
+        "formDescription": "={{ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'CASE FILE: ' + $('Set Project Variables').item.json.TOPIC + '\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n'+ 'All prompt files have been written to:\\n'+ $('Set Project Variables').item.json.projectDir + '/\\n\\n'+ 'WHAT TO DO\\n'+ '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\\n'+ 'IMAGE PROMPTS  \u2192 images/    \u2192 generate images, save as img_001.png \u2026\\n'+ 'VIDEO PROMPTS  \u2192 video/     \u2192 generate clips,  save as clip_001.mp4 \u2026\\n'+ 'MUSIC CUES     \u2192 audio/music_prompts.txt\\n'+                '               \u2192 generate, save as music_cue_01.mp3 \u2026\\n'+ 'SFX CUES       \u2192 audio/sfx_prompts.txt\\n'+                '               \u2192 generate, save as sfx_cue_01.mp3 \u2026\\n\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'Approve when ALL files are in place.' }}",
         "formFields": {
           "values": [
             {
@@ -1133,7 +973,7 @@
     },
     {
       "id": "enhance-vo-claude",
-      "name": "Enhance Script for ElevenLabs",
+      "name": "Enhance Script \u2014 TTS Formatting",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -1417,6 +1257,60 @@
           "timeout": 60000
         }
       }
+    },
+    {
+      "id": "write-music-prompts",
+      "name": "Write Music Prompts File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5520,
+        608
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst items      = $input.all();\nconst projVars   = $('Set Project Variables').item.json;\nconst audioDir   = projVars.projectDir + '/audio';\nconst padded     = n => String(n).padStart(2, '0');\n\nconst lines = items.map((item, i) => {\n  const p   = item.json;\n  const num = padded(i + 1);\n  return [\n    `CUE ${num}`,\n    `Prompt   : ${p.prompt || p.description || ''}`,\n    `Duration : ${p.duration_seconds || 30}s`,\n    `Mood     : ${p.mood || ''}`,\n    `Placement: ${p.timestamp || p.placement || ''}`,\n    `---`\n  ].join('\\n');\n}).join('\\n\\n');\n\nconst marker  = 'RUINS_MUSIC_EOF';\nconst writeCmd = [\n  `mkdir -p \"${audioDir}\"`,\n  `cat > \"${audioDir}/music_prompts.txt\" << '${marker}'`,\n  `RUINS UNTOLD \u2014 MUSIC CUES (${items.length} total)`,\n  ``,\n  `Generate each cue with your preferred tool and save as:`,\n  `  music_cue_01.mp3, music_cue_02.mp3 ... in:`,\n  `  ${audioDir}`,\n  ``,\n  lines,\n  marker,\n  `echo \"Wrote ${items.length} music cues to ${audioDir}/music_prompts.txt\"`\n].join('\\n');\n\nreturn [{ json: { ...projVars, audioDir, writeCmd, promptCount: items.length, promptType: 'music' } }];\n"
+      }
+    },
+    {
+      "id": "exec-write-music",
+      "name": "Save Music Prompts",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        5760,
+        608
+      ],
+      "parameters": {
+        "command": "={{ $json.writeCmd }}"
+      }
+    },
+    {
+      "id": "write-sfx-prompts",
+      "name": "Write SFX Prompts File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5520,
+        800
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst items      = $input.all();\nconst projVars   = $('Set Project Variables').item.json;\nconst audioDir   = projVars.projectDir + '/audio';\nconst padded     = n => String(n).padStart(2, '0');\n\nconst lines = items.map((item, i) => {\n  const p   = item.json;\n  const num = padded(i + 1);\n  return [\n    `SFX ${num}`,\n    `Prompt   : ${p.prompt || p.description || ''}`,\n    `Duration : ${p.duration_seconds || 5}s`,\n    `Placement: ${p.timestamp || p.placement || ''}`,\n    `---`\n  ].join('\\n');\n}).join('\\n\\n');\n\nconst marker  = 'RUINS_SFX_EOF';\nconst writeCmd = [\n  `mkdir -p \"${audioDir}\"`,\n  `cat > \"${audioDir}/sfx_prompts.txt\" << '${marker}'`,\n  `RUINS UNTOLD \u2014 SFX CUES (${items.length} total)`,\n  ``,\n  `Generate each SFX with your preferred tool and save as:`,\n  `  sfx_cue_01.mp3, sfx_cue_02.mp3 ... in:`,\n  `  ${audioDir}`,\n  ``,\n  lines,\n  marker,\n  `echo \"Wrote ${items.length} SFX cues to ${audioDir}/sfx_prompts.txt\"`\n].join('\\n');\n\nreturn [{ json: { ...projVars, audioDir, writeCmd, promptCount: items.length, promptType: 'sfx' } }];\n"
+      }
+    },
+    {
+      "id": "exec-write-sfx",
+      "name": "Save SFX Prompts",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        5760,
+        800
+      ],
+      "parameters": {
+        "command": "={{ $json.writeCmd }}"
+      }
     }
   ],
   "connections": {
@@ -1490,7 +1384,7 @@
       "main": [
         [
           {
-            "node": "Enhance Script for ElevenLabs",
+            "node": "Enhance Script \u2014 TTS Formatting",
             "type": "main",
             "index": 0
           }
@@ -1649,86 +1543,6 @@
         ]
       ]
     },
-    "Split Music Prompts": {
-      "main": [
-        [
-          {
-            "node": "Generate Music \u2014 ElevenLabs",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "All Assets Complete",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Generate Music \u2014 ElevenLabs": {
-      "main": [
-        [
-          {
-            "node": "Save Music File",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Save Music File": {
-      "main": [
-        [
-          {
-            "node": "Split Music Prompts",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split SFX Prompts": {
-      "main": [
-        [
-          {
-            "node": "Generate SFX \u2014 ElevenLabs",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "All Assets Complete",
-            "type": "main",
-            "index": 2
-          }
-        ]
-      ]
-    },
-    "Generate SFX \u2014 ElevenLabs": {
-      "main": [
-        [
-          {
-            "node": "Save SFX File",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Save SFX File": {
-      "main": [
-        [
-          {
-            "node": "Split SFX Prompts",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "All Assets Complete": {
       "main": [
         [
@@ -1833,7 +1647,7 @@
       "main": [
         [
           {
-            "node": "Split Music Prompts",
+            "node": "Write Music Prompts File",
             "type": "main",
             "index": 0
           }
@@ -1844,7 +1658,7 @@
       "main": [
         [
           {
-            "node": "Split SFX Prompts",
+            "node": "Write SFX Prompts File",
             "type": "main",
             "index": 0
           }
@@ -1977,17 +1791,6 @@
         [
           {
             "node": "Mark Complete",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Enhance Script for ElevenLabs": {
-      "main": [
-        [
-          {
-            "node": "Parse & Chunk Voiceover",
             "type": "main",
             "index": 0
           }
@@ -2156,6 +1959,61 @@
         [
           {
             "node": "Save Chunk Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Music Prompts File": {
+      "main": [
+        [
+          {
+            "node": "Save Music Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Music Prompts": {
+      "main": [
+        [
+          {
+            "node": "All Assets Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write SFX Prompts File": {
+      "main": [
+        [
+          {
+            "node": "Save SFX Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save SFX Prompts": {
+      "main": [
+        [
+          {
+            "node": "All Assets Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enhance Script \u2014 TTS Formatting": {
+      "main": [
+        [
+          {
+            "node": "Parse & Chunk Voiceover",
             "type": "main",
             "index": 0
           }
