@@ -1113,6 +1113,88 @@
         5520,
         144
       ]
+    },
+    {
+      "id": "node-mark-in-progress",
+      "name": "Mark In Progress",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        360,
+        304
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1kF8cfyh3qZZIcPcSWYs8olZZYPxFhxBTUhtjK04Eb68",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "gid"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "TOPIC": "={{ $json.TOPIC }}",
+            "STATUS": "In Progress"
+          },
+          "matchingColumns": [
+            "TOPIC"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "node-mark-complete",
+      "name": "Mark Complete",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        6960,
+        512
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1kF8cfyh3qZZIcPcSWYs8olZZYPxFhxBTUhtjK04Eb68",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "gid"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "TOPIC": "={{ $('Set Project Variables').item.json.TOPIC }}",
+            "STATUS": "Complete"
+          },
+          "matchingColumns": [
+            "TOPIC"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {
@@ -1120,7 +1202,7 @@
       "main": [
         [
           {
-            "node": "Create Project Directories",
+            "node": "Mark In Progress",
             "type": "main",
             "index": 0
           }
@@ -1673,6 +1755,28 @@
         [
           {
             "node": "Set Project Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark In Progress": {
+      "main": [
+        [
+          {
+            "node": "Create Project Directories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Production Complete": {
+      "main": [
+        [
+          {
+            "node": "Mark Complete",
             "type": "main",
             "index": 0
           }
