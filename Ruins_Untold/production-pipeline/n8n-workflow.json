@@ -1068,7 +1068,7 @@
         600
       ],
       "parameters": {
-        "jsCode": "\nconst item       = $input.item.json;\nconst staticData = $getWorkflowStaticData(\"global\");\n\nconst kieInput = {\n  dialogue: [\n    {\n      text:  item.chunkText,\n      voice: \"4YYIPFl9wE5c4L2eu2Gb\"  // Ruins Untold voice ID\n    }\n  ],\n  stability: 0\n};\n\n// Chain previous_request_ids for voice continuity (chunks 2+)\nif (!item.isFirstChunk && staticData.ruinsVoicePrevIds && staticData.ruinsVoicePrevIds.length > 0) {\n  kieInput.previous_request_ids = staticData.ruinsVoicePrevIds.slice(-3);\n}\n\nconst kieBody = {\n  model: \"elevenlabs/text-to-dialogue-v3\",\n  input: kieInput\n};\n\nreturn [{\n  json: {\n    ...item,\n    kieBody:         JSON.stringify(kieBody),\n    includedPrevIds: kieInput.previous_request_ids || []\n  }\n}];\n"
+        "jsCode": "\nconst item       = $input.item.json;\nconst staticData = $getWorkflowStaticData(\"global\");\n\nconst kieInput = {\n  dialogue: [\n    {\n      text:  item.chunkText,\n      voice: \"4YYIPFl9wE5c4L2eu2Gb\"  // Ruins Untold voice ID\n    }\n  ],\n  stability: 0.5\n};\n\n// Chain previous_request_ids for voice continuity (chunks 2+)\nif (!item.isFirstChunk && staticData.ruinsVoicePrevIds && staticData.ruinsVoicePrevIds.length > 0) {\n  kieInput.previous_request_ids = staticData.ruinsVoicePrevIds.slice(-3);\n}\n\nconst kieBody = {\n  model: \"elevenlabs/text-to-dialogue-v3\",\n  input: kieInput\n};\n\nreturn [{\n  json: {\n    ...item,\n    kieBody:         JSON.stringify(kieBody),\n    includedPrevIds: kieInput.previous_request_ids || []\n  }\n}];\n"
       }
     },
     {
