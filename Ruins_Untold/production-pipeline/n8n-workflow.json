@@ -1638,7 +1638,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\nconst kieInput = {\n  prompt:           p.veo_prompt || p.prompt || '',\n  duration_seconds: p.duration_seconds || 8,\n  aspect_ratio:     '16:9'\n};\nreturn [{ json: {\n  ...item,\n  kieBody: JSON.stringify({ model: 'PLACEHOLDER_VEO_MODEL', input: kieInput }),\n  promptText: kieInput.prompt\n} }];\n"
+        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\n\n// Veo API: flat body, no 'input' wrapper\nconst kieBody = {\n  model:           'veo3_lite',\n  prompt:          p.veo_prompt || p.prompt || '',\n  generationType:  'TEXT_2_VIDEO',\n  aspect_ratio:    '16:9',\n  resolution:      '1080p',\n  duration:        p.duration || 8\n};\n\nreturn [{ json: {\n  ...item,\n  kieBody:    JSON.stringify(kieBody),\n  promptText: kieBody.prompt\n} }];\n"
       }
     },
     {
@@ -1652,7 +1652,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "url": "https://api.kie.ai/api/v1/veo/generate",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
