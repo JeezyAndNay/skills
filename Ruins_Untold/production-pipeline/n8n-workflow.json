@@ -501,7 +501,7 @@
       "parameters": {
         "resume": "form",
         "formTitle": "RUINS UNTOLD \u2014 ASSET AUTHORIZATION",
-        "formDescription": "={{ 'CASE FILE: ' + $json.TOPIC + '\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'ASSETS QUEUED FOR GENERATION:\\n\\n'+ '  IMAGES  (NanoBanana 2)   ' + $json.imageTotalCount + ' prompts\\n'+ '  VIDEOS  (Veo 3.1 Fast)   ' + $json.videoTotalCount + ' prompts\\n'+ '  MUSIC   (ElevenLabs)     ' + $json.musicTotalCount + ' cues\\n'+ '  SFX     (ElevenLabs)     ' + $json.sfxTotalCount + ' cues\\n\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'PROMPT FILE \u2192 ' + $json.projectDir + '/scripts/asset_prompts.json\\n\\n'+ 'WARNING: Authorization commits to generation API costs.\\n'+ 'Review the prompt file before proceeding. There is no undo.'  }}",
+        "formDescription": "={{ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'CASE FILE: ' + $json.TOPIC + '\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n'+ $json.costSummary + '\\n\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'PROJECT DIR : ' + $json.projectDir + '\\n'+ '  /images/  \u2014 ' + $json.imageCount + ' images\\n'+ '  /videos/  \u2014 ' + $json.videoCount + ' videos\\n'+ '  /audio/   \u2014 ' + ($json.musicCount + $json.sfxCount) + ' music + sfx\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'Review all assets before authorizing assembly.' }}",
         "formFields": {
           "values": [
             {
@@ -510,19 +510,14 @@
               "fieldOptions": {
                 "values": [
                   {
-                    "option": "AUTHORIZE \u2014 COMMENCE GENERATION"
+                    "option": "AUTHORIZE \u2014 PROCEED TO ASSEMBLY"
                   },
                   {
-                    "option": "HOLD \u2014 REVISIONS REQUIRED"
+                    "option": "ABORT \u2014 REGENERATE PROMPTS"
                   }
                 ]
               },
               "requiredField": true
-            },
-            {
-              "fieldLabel": "REVISION DIRECTIVE",
-              "fieldType": "textarea",
-              "placeholder": "Which prompts need to change and why? Be specific."
             }
           ]
         },
@@ -546,14 +541,14 @@
           "options": {
             "caseSensitive": false,
             "leftValue": "",
-            "typeValidation": "strict",
+            "typeValidation": "loose",
             "version": 1
           },
           "conditions": [
             {
               "id": "cond-prompts",
               "leftValue": "={{ $json.Decision }}",
-              "rightValue": "approve",
+              "rightValue": "AUTHORIZE \u2014 PROCEED TO ASSEMBLY",
               "operator": {
                 "type": "string",
                 "operation": "contains"
@@ -750,7 +745,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6480,
+        8880,
         144
       ]
     },
@@ -871,7 +866,7 @@
       "type": "n8n-nodes-base.spreadsheetFile",
       "typeVersion": 2,
       "position": [
-        6720,
+        9120,
         144
       ]
     },
@@ -885,7 +880,7 @@
       "type": "n8n-nodes-base.writeBinaryFile",
       "typeVersion": 1,
       "position": [
-        6960,
+        9360,
         144
       ]
     },
@@ -1412,6 +1407,784 @@
         "mode": "runOnceForEachItem",
         "jsCode": "const durationRaw = $input.item.json.stdout || '';\nconst duration    = parseFloat(durationRaw.trim()) || 0;\nconst mm          = Math.floor(duration / 60);\nconst ss          = Math.round(duration % 60);\nconst durationMMSS = `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;\n\nconst projectVars  = $('Set Project Variables').item.json;\nconst scriptParsed = $('Parse Script Response').item.json;\n\nconst scriptText   = scriptParsed.scriptText || '';\nconst wordCount    = scriptText.split(/\\s+/).filter(w => w.length > 0).length;\nconst wpm          = duration > 0 ? Math.round((wordCount / duration) * 60) : 150;\nconst audioDir     = projectVars.projectDir + '/audio';\n\nreturn [{\n  json: {\n    ...projectVars,\n    scriptText,\n    visualPromptsTable: scriptParsed.visualPromptsTable || '',\n    wordCount,\n    durationSeconds: Math.round(duration * 10) / 10,\n    durationMMSS,\n    wpm,\n    audioDir,\n    voiceoverPath: audioDir + '/voiceover_final.mp3'\n  }\n}];\n"
       }
+    },
+    {
+      "id": "prep-image-items",
+      "name": "Prep Image Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6480,
+        -100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst parsedData = $('Parse Asset Prompts').item.json;\nconst prompts    = parsedData.imagePrompts || [];\nconst projectVars = $('Set Project Variables').item.json;\nconst assetDir   = projectVars.projectDir + '/images';\n\nconst staticData = $getWorkflowStaticData('global');\nstaticData.imageCost = 0;\nstaticData.imageCount  = 0;\n\nreturn prompts.map((p, i) => ({\n  json: {\n    ...projectVars,\n    assetDir,\n    promptIndex:   i + 1,\n    totalPrompts:  prompts.length,\n    assetType:     'image',\n    rawPrompt:     p,\n    filename:      p.filename || 'image_' + String(i + 1).padStart(4, '0'),\n    timestamp:     p.timestamp || '00:00'\n  }\n}));\n"
+      }
+    },
+    {
+      "id": "split-image-prompts",
+      "name": "Split Image Prompts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6720,
+        -100
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "prepare-image-req",
+      "name": "Prepare Image Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6960,
+        -100
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst item = $input.item.json;\nconst nb2  = typeof item.rawPrompt.nb2_prompt === 'object'\n  ? item.rawPrompt.nb2_prompt\n  : JSON.parse(item.rawPrompt.nb2_prompt || '{}');\n\nconst pos = Object.entries(nb2)\n  .filter(([k]) => !k.toLowerCase().includes('negative'))\n  .map(([k, v]) => Array.isArray(v) ? v.join(', ') : String(v))\n  .filter(Boolean);\nconst promptText = pos.join(', ');\nconst negText = Array.isArray(nb2.negative_constraints)\n  ? nb2.negative_constraints.join(', ') : '';\n\nconst kieInput = { prompt: promptText, width: 1920, height: 1080, num_images: 1 };\nif (negText) kieInput.negative_prompt = negText;\n\nreturn [{ json: {\n  ...item,\n  kieBody: JSON.stringify({ model: 'nano-banana-2', input: kieInput }),\n  promptText\n} }];\n"
+      }
+    },
+    {
+      "id": "submit-image-kie",
+      "name": "Submit Image to Kie.ai",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7200,
+        -100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.kieBody }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "extract-image-id",
+      "name": "Extract Image Task ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7440,
+        -100
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst response = $input.item.json;\nconst meta     = $('Prepare Image Request').item.json;\nif (response.code !== 200) {\n  throw new Error(`Kie.ai image failed (${meta.filename}): ${response.msg}`);\n}\nreturn [{ json: { ...meta, kieTaskId: response.data.taskId } }];\n"
+      }
+    },
+    {
+      "id": "wait-image",
+      "name": "Wait for Image",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        7680,
+        -100
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "unit": "seconds",
+        "amount": 15
+      }
+    },
+    {
+      "id": "poll-image",
+      "name": "Poll Image Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7920,
+        -100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('Extract Image Task ID').item.json.kieTaskId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "complete-image",
+      "name": "Image Generation Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        8160,
+        -100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-image-s",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-image-f",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "fail",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "store-image-result",
+      "name": "Store Image Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8400,
+        -100
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst poll    = $input.item.json;\nconst meta    = $('Prepare Image Request').item.json;\nconst staticData = $getWorkflowStaticData('global');\n\nlet resultJson = {};\ntry { resultJson = JSON.parse(poll.data.resultJson || '{}'); } catch(e) {}\n\nconst assetUrl = (resultJson.resultUrls || [])[0] || '';\nif (!assetUrl) throw new Error(`No URL for ${meta.filename} \u2014 state: ${poll.data.state}`);\n\nstaticData.imageCost = (staticData.imageCost || 0) + (poll.data.creditsConsumed || 0);\nstaticData.imageCount  = (staticData.imageCount  || 0) + 1;\n\nreturn [{ json: {\n  ...meta,\n  assetUrl,\n  filepath:        meta.assetDir + '/' + meta.filename + '.png',\n  creditsConsumed: poll.data.creditsConsumed || 0\n} }];\n"
+      }
+    },
+    {
+      "id": "save-image-file",
+      "name": "Save Image File",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        8640,
+        -100
+      ],
+      "parameters": {
+        "command": "={{ 'mkdir -p \"' + $json.assetDir + '\" && curl -fsSL -o \"' + $json.filepath + '\" \"' + $json.assetUrl + '\" && echo \"\u2713 ' + $json.filename + '.png\"' }}"
+      }
+    },
+    {
+      "id": "prep-video-items",
+      "name": "Prep Video Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9120,
+        144
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst parsedData = $('Parse Asset Prompts').item.json;\nconst prompts    = parsedData.videoPrompts || [];\nconst projectVars = $('Set Project Variables').item.json;\nconst assetDir   = projectVars.projectDir + '/videos';\n\nconst staticData = $getWorkflowStaticData('global');\nstaticData.videoCost = 0;\nstaticData.videoCount  = 0;\n\nreturn prompts.map((p, i) => ({\n  json: {\n    ...projectVars,\n    assetDir,\n    promptIndex:   i + 1,\n    totalPrompts:  prompts.length,\n    assetType:     'video',\n    rawPrompt:     p,\n    filename:      p.filename || 'video_' + String(i + 1).padStart(4, '0'),\n    timestamp:     p.timestamp || '00:00'\n  }\n}));\n"
+      }
+    },
+    {
+      "id": "split-video-prompts",
+      "name": "Split Video Prompts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        9360,
+        144
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "prepare-video-req",
+      "name": "Prepare Video Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9600,
+        144
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\nconst kieInput = {\n  prompt:           p.veo_prompt || p.prompt || '',\n  duration_seconds: p.duration_seconds || 8,\n  aspect_ratio:     '16:9'\n};\nreturn [{ json: {\n  ...item,\n  kieBody: JSON.stringify({ model: 'PLACEHOLDER_VEO_MODEL', input: kieInput }),\n  promptText: kieInput.prompt\n} }];\n"
+      }
+    },
+    {
+      "id": "submit-video-kie",
+      "name": "Submit Video to Kie.ai",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        9840,
+        144
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.kieBody }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "extract-video-id",
+      "name": "Extract Video Task ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        10080,
+        144
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst response = $input.item.json;\nconst meta     = $('Prepare Video Request').item.json;\nif (response.code !== 200) {\n  throw new Error(`Kie.ai video failed (${meta.filename}): ${response.msg}`);\n}\nreturn [{ json: { ...meta, kieTaskId: response.data.taskId } }];\n"
+      }
+    },
+    {
+      "id": "wait-video",
+      "name": "Wait for Video",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        10320,
+        144
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "unit": "seconds",
+        "amount": 30
+      }
+    },
+    {
+      "id": "poll-video",
+      "name": "Poll Video Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        10560,
+        144
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('Extract Video Task ID').item.json.kieTaskId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "complete-video",
+      "name": "Video Generation Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        10800,
+        144
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-video-s",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-video-f",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "fail",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "store-video-result",
+      "name": "Store Video Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        11040,
+        144
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst poll    = $input.item.json;\nconst meta    = $('Prepare Video Request').item.json;\nconst staticData = $getWorkflowStaticData('global');\n\nlet resultJson = {};\ntry { resultJson = JSON.parse(poll.data.resultJson || '{}'); } catch(e) {}\n\nconst assetUrl = (resultJson.resultUrls || [])[0] || '';\nif (!assetUrl) throw new Error(`No URL for ${meta.filename} \u2014 state: ${poll.data.state}`);\n\nstaticData.videoCost = (staticData.videoCost || 0) + (poll.data.creditsConsumed || 0);\nstaticData.videoCount  = (staticData.videoCount  || 0) + 1;\n\nreturn [{ json: {\n  ...meta,\n  assetUrl,\n  filepath:        meta.assetDir + '/' + meta.filename + '.mp4',\n  creditsConsumed: poll.data.creditsConsumed || 0\n} }];\n"
+      }
+    },
+    {
+      "id": "save-video-file",
+      "name": "Save Video File",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        11280,
+        144
+      ],
+      "parameters": {
+        "command": "={{ 'mkdir -p \"' + $json.assetDir + '\" && curl -fsSL -o \"' + $json.filepath + '\" \"' + $json.assetUrl + '\" && echo \"\u2713 ' + $json.filename + '.mp4\"' }}"
+      }
+    },
+    {
+      "id": "prep-music-items",
+      "name": "Prep Music Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6480,
+        608
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst parsedData = $('Parse Asset Prompts').item.json;\nconst prompts    = parsedData.musicPrompts || [];\nconst projectVars = $('Set Project Variables').item.json;\nconst assetDir   = projectVars.projectDir + '/audio';\n\nconst staticData = $getWorkflowStaticData('global');\nstaticData.musicCost = 0;\nstaticData.musicCount  = 0;\n\nreturn prompts.map((p, i) => ({\n  json: {\n    ...projectVars,\n    assetDir,\n    promptIndex:   i + 1,\n    totalPrompts:  prompts.length,\n    assetType:     'music',\n    rawPrompt:     p,\n    filename:      p.filename || 'music_' + String(i + 1).padStart(4, '0'),\n    timestamp:     p.timestamp || '00:00'\n  }\n}));\n"
+      }
+    },
+    {
+      "id": "split-music-prompts",
+      "name": "Split Music Prompts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6720,
+        608
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "prepare-music-req",
+      "name": "Prepare Music Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6960,
+        608
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\nconst kieInput = {\n  prompt:           p.prompt || '',\n  duration_seconds: p.duration_seconds || 30\n};\nreturn [{ json: {\n  ...item,\n  kieBody: JSON.stringify({ model: 'PLACEHOLDER_SUNO_MODEL', input: kieInput }),\n  promptText: kieInput.prompt\n} }];\n"
+      }
+    },
+    {
+      "id": "submit-music-kie",
+      "name": "Submit Music to Kie.ai",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7200,
+        608
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.kieBody }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "extract-music-id",
+      "name": "Extract Music Task ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7440,
+        608
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst response = $input.item.json;\nconst meta     = $('Prepare Music Request').item.json;\nif (response.code !== 200) {\n  throw new Error(`Kie.ai music failed (${meta.filename}): ${response.msg}`);\n}\nreturn [{ json: { ...meta, kieTaskId: response.data.taskId } }];\n"
+      }
+    },
+    {
+      "id": "wait-music",
+      "name": "Wait for Music",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        7680,
+        608
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "unit": "seconds",
+        "amount": 20
+      }
+    },
+    {
+      "id": "poll-music",
+      "name": "Poll Music Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7920,
+        608
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('Extract Music Task ID').item.json.kieTaskId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "complete-music",
+      "name": "Music Generation Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        8160,
+        608
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-music-s",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-music-f",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "fail",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "store-music-result",
+      "name": "Store Music Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8400,
+        608
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst poll    = $input.item.json;\nconst meta    = $('Prepare Music Request').item.json;\nconst staticData = $getWorkflowStaticData('global');\n\nlet resultJson = {};\ntry { resultJson = JSON.parse(poll.data.resultJson || '{}'); } catch(e) {}\n\nconst assetUrl = (resultJson.resultUrls || [])[0] || '';\nif (!assetUrl) throw new Error(`No URL for ${meta.filename} \u2014 state: ${poll.data.state}`);\n\nstaticData.musicCost = (staticData.musicCost || 0) + (poll.data.creditsConsumed || 0);\nstaticData.musicCount  = (staticData.musicCount  || 0) + 1;\n\nreturn [{ json: {\n  ...meta,\n  assetUrl,\n  filepath:        meta.assetDir + '/' + meta.filename + '.mp3',\n  creditsConsumed: poll.data.creditsConsumed || 0\n} }];\n"
+      }
+    },
+    {
+      "id": "save-music-file",
+      "name": "Save Music File",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        8640,
+        608
+      ],
+      "parameters": {
+        "command": "={{ 'mkdir -p \"' + $json.assetDir + '\" && curl -fsSL -o \"' + $json.filepath + '\" \"' + $json.assetUrl + '\" && echo \"\u2713 ' + $json.filename + '.mp3\"' }}"
+      }
+    },
+    {
+      "id": "prep-sfx-items",
+      "name": "Prep Sfx Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6480,
+        900
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst parsedData = $('Parse Asset Prompts').item.json;\nconst prompts    = parsedData.sfxPrompts || [];\nconst projectVars = $('Set Project Variables').item.json;\nconst assetDir   = projectVars.projectDir + '/audio';\n\nconst staticData = $getWorkflowStaticData('global');\nstaticData.sfxCost = 0;\nstaticData.sfxCount  = 0;\n\nreturn prompts.map((p, i) => ({\n  json: {\n    ...projectVars,\n    assetDir,\n    promptIndex:   i + 1,\n    totalPrompts:  prompts.length,\n    assetType:     'sfx',\n    rawPrompt:     p,\n    filename:      p.filename || 'sfx_' + String(i + 1).padStart(4, '0'),\n    timestamp:     p.timestamp || '00:00'\n  }\n}));\n"
+      }
+    },
+    {
+      "id": "split-sfx-prompts",
+      "name": "Split Sfx Prompts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6720,
+        900
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "prepare-sfx-req",
+      "name": "Prepare Sfx Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6960,
+        900
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst item = $input.item.json;\nconst p    = item.rawPrompt;\nconst kieInput = {\n  prompt:           p.prompt || '',\n  duration_seconds: p.duration_seconds || 30\n};\nreturn [{ json: {\n  ...item,\n  kieBody: JSON.stringify({ model: 'PLACEHOLDER_SUNO_MODEL', input: kieInput }),\n  promptText: kieInput.prompt\n} }];\n"
+      }
+    },
+    {
+      "id": "submit-sfx-kie",
+      "name": "Submit Sfx to Kie.ai",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7200,
+        900
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.kieBody }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "extract-sfx-id",
+      "name": "Extract Sfx Task ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7440,
+        900
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst response = $input.item.json;\nconst meta     = $('Prepare Sfx Request').item.json;\nif (response.code !== 200) {\n  throw new Error(`Kie.ai sfx failed (${meta.filename}): ${response.msg}`);\n}\nreturn [{ json: { ...meta, kieTaskId: response.data.taskId } }];\n"
+      }
+    },
+    {
+      "id": "wait-sfx",
+      "name": "Wait for Sfx",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        7680,
+        900
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "unit": "seconds",
+        "amount": 15
+      }
+    },
+    {
+      "id": "poll-sfx",
+      "name": "Poll Sfx Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        7920,
+        900
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('Extract Sfx Task ID').item.json.kieTaskId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "complete-sfx",
+      "name": "Sfx Generation Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        8160,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-sfx-s",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-sfx-f",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "fail",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "store-sfx-result",
+      "name": "Store Sfx Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8400,
+        900
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst poll    = $input.item.json;\nconst meta    = $('Prepare Sfx Request').item.json;\nconst staticData = $getWorkflowStaticData('global');\n\nlet resultJson = {};\ntry { resultJson = JSON.parse(poll.data.resultJson || '{}'); } catch(e) {}\n\nconst assetUrl = (resultJson.resultUrls || [])[0] || '';\nif (!assetUrl) throw new Error(`No URL for ${meta.filename} \u2014 state: ${poll.data.state}`);\n\nstaticData.sfxCost = (staticData.sfxCost || 0) + (poll.data.creditsConsumed || 0);\nstaticData.sfxCount  = (staticData.sfxCount  || 0) + 1;\n\nreturn [{ json: {\n  ...meta,\n  assetUrl,\n  filepath:        meta.assetDir + '/' + meta.filename + '.mp3',\n  creditsConsumed: poll.data.creditsConsumed || 0\n} }];\n"
+      }
+    },
+    {
+      "id": "save-sfx-file",
+      "name": "Save Sfx File",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        8640,
+        900
+      ],
+      "parameters": {
+        "command": "={{ 'mkdir -p \"' + $json.assetDir + '\" && curl -fsSL -o \"' + $json.filepath + '\" \"' + $json.assetUrl + '\" && echo \"\u2713 ' + $json.filename + '.mp3\"' }}"
+      }
+    },
+    {
+      "id": "aggregate-gen-costs",
+      "name": "Aggregate Generation Costs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7200,
+        512
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst staticData = $getWorkflowStaticData('global');\nconst vars = $('Set Project Variables').item.json;\n\nconst imageCost = Math.round((staticData.imageCost || 0) * 100) / 100;\nconst videoCost = Math.round((staticData.videoCost || 0) * 100) / 100;\nconst musicCost = Math.round((staticData.musicCost || 0) * 100) / 100;\nconst sfxCost   = Math.round((staticData.sfxCost   || 0) * 100) / 100;\nconst totalCost = Math.round((imageCost+videoCost+musicCost+sfxCost)*100)/100;\n\nconst BAR = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';\nconst costSummary = [\n  BAR,\n  'GENERATION COMPLETE \u2014 COST SUMMARY',\n  BAR,\n  `  IMAGES  (NanoBanana 2) : ${staticData.imageCount||0} files \u2014 ${imageCost} credits`,\n  `  VIDEOS  (Veo 3.1 Lite) : ${staticData.videoCount||0} files \u2014 ${videoCost} credits`,\n  `  MUSIC   (Suno)         : ${staticData.musicCount||0} files \u2014 ${musicCost} credits`,\n  `  SFX     (Suno)         : ${staticData.sfxCount||0}   files \u2014 ${sfxCost} credits`,\n  BAR,\n  `  TOTAL CREDITS          : ${totalCost}`,\n  BAR\n].join('\\n');\n\nreturn [{ json: {\n  ...vars, imageCost, imageCount: staticData.imageCount||0,\n  videoCost, videoCount: staticData.videoCount||0,\n  musicCost, musicCount: staticData.musicCount||0,\n  sfxCost,   sfxCount:   staticData.sfxCount||0,\n  totalCost, costSummary\n} }];\n"
+      }
     }
   ],
   "connections": {
@@ -1598,7 +2371,17 @@
       "main": [
         [
           {
-            "node": "Prompts Review & Approval",
+            "node": "Expand Image Prompts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Expand Music Prompts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Expand SFX Prompts",
             "type": "main",
             "index": 0
           }
@@ -1620,17 +2403,7 @@
       "main": [
         [
           {
-            "node": "Expand Image Prompts",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Expand Music Prompts",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Expand SFX Prompts",
+            "node": "Build Asset Manifest",
             "type": "main",
             "index": 0
           }
@@ -1648,7 +2421,7 @@
       "main": [
         [
           {
-            "node": "Wait \u2014 Manual Image & Video Generation",
+            "node": "Aggregate Generation Costs",
             "type": "main",
             "index": 0
           }
@@ -1792,7 +2565,7 @@
       "main": [
         [
           {
-            "node": "Expand Video Prompts",
+            "node": "Prep Image Items",
             "type": "main",
             "index": 0
           }
@@ -1814,7 +2587,7 @@
       "main": [
         [
           {
-            "node": "All Assets Complete",
+            "node": "Prep Video Items",
             "type": "main",
             "index": 0
           }
@@ -2081,7 +2854,7 @@
       "main": [
         [
           {
-            "node": "All Assets Complete",
+            "node": "Prep Music Items",
             "type": "main",
             "index": 0
           }
@@ -2103,7 +2876,7 @@
       "main": [
         [
           {
-            "node": "All Assets Complete",
+            "node": "Prep Sfx Items",
             "type": "main",
             "index": 0
           }
@@ -2170,6 +2943,513 @@
         [
           {
             "node": "Analyze Media Placement \u2014 Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Image Items": {
+      "main": [
+        [
+          {
+            "node": "Split Image Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Image Prompts": {
+      "main": [
+        [
+          {
+            "node": "Prepare Image Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Expand Video Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Image Request": {
+      "main": [
+        [
+          {
+            "node": "Submit Image to Kie.ai",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Image to Kie.ai": {
+      "main": [
+        [
+          {
+            "node": "Extract Image Task ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Image Task ID": {
+      "main": [
+        [
+          {
+            "node": "Wait for Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Image": {
+      "main": [
+        [
+          {
+            "node": "Poll Image Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Image Status": {
+      "main": [
+        [
+          {
+            "node": "Image Generation Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Generation Complete?": {
+      "main": [
+        [
+          {
+            "node": "Store Image Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Image Result": {
+      "main": [
+        [
+          {
+            "node": "Save Image File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Image File": {
+      "main": [
+        [
+          {
+            "node": "Split Image Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Video Items": {
+      "main": [
+        [
+          {
+            "node": "Split Video Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Video Prompts": {
+      "main": [
+        [
+          {
+            "node": "Prepare Video Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "All Assets Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Video Request": {
+      "main": [
+        [
+          {
+            "node": "Submit Video to Kie.ai",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Video to Kie.ai": {
+      "main": [
+        [
+          {
+            "node": "Extract Video Task ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Video Task ID": {
+      "main": [
+        [
+          {
+            "node": "Wait for Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Video": {
+      "main": [
+        [
+          {
+            "node": "Poll Video Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Video Status": {
+      "main": [
+        [
+          {
+            "node": "Video Generation Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Generation Complete?": {
+      "main": [
+        [
+          {
+            "node": "Store Video Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Video Result": {
+      "main": [
+        [
+          {
+            "node": "Save Video File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Video File": {
+      "main": [
+        [
+          {
+            "node": "Split Video Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Music Items": {
+      "main": [
+        [
+          {
+            "node": "Split Music Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Music Prompts": {
+      "main": [
+        [
+          {
+            "node": "Prepare Music Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "All Assets Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Music Request": {
+      "main": [
+        [
+          {
+            "node": "Submit Music to Kie.ai",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Music to Kie.ai": {
+      "main": [
+        [
+          {
+            "node": "Extract Music Task ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Music Task ID": {
+      "main": [
+        [
+          {
+            "node": "Wait for Music",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Music": {
+      "main": [
+        [
+          {
+            "node": "Poll Music Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Music Status": {
+      "main": [
+        [
+          {
+            "node": "Music Generation Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Music Generation Complete?": {
+      "main": [
+        [
+          {
+            "node": "Store Music Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Music",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Music Result": {
+      "main": [
+        [
+          {
+            "node": "Save Music File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Music File": {
+      "main": [
+        [
+          {
+            "node": "Split Music Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep Sfx Items": {
+      "main": [
+        [
+          {
+            "node": "Split Sfx Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Sfx Prompts": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sfx Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "All Assets Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sfx Request": {
+      "main": [
+        [
+          {
+            "node": "Submit Sfx to Kie.ai",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Sfx to Kie.ai": {
+      "main": [
+        [
+          {
+            "node": "Extract Sfx Task ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Sfx Task ID": {
+      "main": [
+        [
+          {
+            "node": "Wait for Sfx",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Sfx": {
+      "main": [
+        [
+          {
+            "node": "Poll Sfx Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Sfx Status": {
+      "main": [
+        [
+          {
+            "node": "Sfx Generation Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sfx Generation Complete?": {
+      "main": [
+        [
+          {
+            "node": "Store Sfx Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Sfx",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Sfx Result": {
+      "main": [
+        [
+          {
+            "node": "Save Sfx File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Sfx File": {
+      "main": [
+        [
+          {
+            "node": "Split Sfx Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Generation Costs": {
+      "main": [
+        [
+          {
+            "node": "Prompts Review & Approval",
             "type": "main",
             "index": 0
           }
