@@ -18,12 +18,23 @@ jobs:
           N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
           N8N_WORKFLOW_ID: ${{ secrets.N8N_WORKFLOW_ID }}
         run: |
-          cat Ruins_Untold/catalog/n8n-workflow.json | \
-            python3 -c "import json,sys,os; w=json.load(sys.stdin); w['id']=os.environ['N8N_WORKFLOW_ID']; print(json.dumps(w))" | \
-            curl -sf -X PUT \
-              "http://localhost:5678/api/v1/workflows/${N8N_WORKFLOW_ID}" \
-              -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
-              -H "Content-Type: application/json" \
-              -d @- \
-          && echo "Workflow synced to n8n" \
-          || (echo "Sync failed" && exit 1)
+          echo "Building payload..."
+          PAYLOAD=$(python3 -c "import json,sys,os; w=json.load(open('Ruins_Untold/catalog/n8n-workflow.json')); w['id']=os.environ['N8N_WORKFLOW_ID']; print(json.dumps(w))")
+
+          echo "Sending to n8n (workflow ID: ${N8N_WORKFLOW_ID})..."
+          HTTP_CODE=$(curl -s -o /tmp/n8n_response.json -w "%{http_code}" -X PUT \
+            "http://localhost:5678/api/v1/workflows/${N8N_WORKFLOW_ID}" \
+            -H "X-N8N-API-KEY: ${N8N_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          echo "HTTP status: ${HTTP_CODE}"
+          echo "Response body:"
+          cat /tmp/n8n_response.json
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Workflow synced to n8n"
+          else
+            echo "Sync failed with HTTP ${HTTP_CODE}"
+            exit 1
+          fi
