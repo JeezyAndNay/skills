@@ -1311,6 +1311,71 @@
       "parameters": {
         "command": "={{ $json.writeCmd }}"
       }
+    },
+    {
+      "id": "summarize-chunks",
+      "name": "Summarize Chunks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2760,
+        480
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst first  = items[0].json;\n\nconst chunkList = items.map((item) => {\n  const text    = item.json.chunkText || '';\n  const preview = text.substring(0, 180).replace(/\\n/g, ' ');\n  return `  CHUNK ${item.json.chunkNumber} of ${item.json.chunkCount}  (${text.length.toLocaleString()} chars)\\n  \"${preview}...\"`;\n}).join('\\n\\n');\n\nconst totalChars = items.reduce((sum, i) => sum + (i.json.chunkText || '').length, 0);\n\nreturn [{\n  json: {\n    ...first,\n    chunkSummaryText: chunkList,\n    totalChunks:      items.length,\n    totalChars:       totalChars,\n    allChunkItems:    items.map(i => i.json)\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "vo-chunks-approval",
+      "name": "Voiceover Chunks Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        3000,
+        480
+      ],
+      "parameters": {
+        "resume": "form",
+        "formTitle": "RUINS UNTOLD \u2014 VOICEOVER AUTHORIZATION",
+        "formDescription": "={{ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'CASE FILE: ' + $json.TOPIC + '\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n'+ 'CHUNKS READY FOR VOICEOVER GENERATION:\\n\\n'+ $json.chunkSummaryText + '\\n\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'TOTAL CHUNKS : ' + $json.totalChunks + '\\n'+ 'TOTAL CHARS  : ' + $json.totalChars.toLocaleString() + '\\n'+ 'KIE.AI CALLS : ' + $json.totalChunks + ' (one per chunk)\\n'+ 'AUDIO DIR    : ' + $json.audioDir + '\\n'+ 'CHUNK FILES  : ' + $json.audioDir + '/voiceover_chunks/*.txt\\n\\n'+ '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n'+ 'Review chunk .txt files before authorizing generation.' }}",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "AUTHORIZATION",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "AUTHORIZE \u2014 GENERATE VOICEOVER"
+                  },
+                  {
+                    "option": "ABORT \u2014 DO NOT GENERATE"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "formLayout": "wide"
+        }
+      }
+    },
+    {
+      "id": "reexpand-chunk-items",
+      "name": "Re-expand Chunk Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3240,
+        480
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const allItems = $input.item.json.allChunkItems;\nreturn allItems.map(item => ({ json: item }));\n"
+      }
     }
   ],
   "connections": {
@@ -1834,7 +1899,7 @@
       "main": [
         [
           {
-            "node": "Split Chunks",
+            "node": "Summarize Chunks",
             "type": "main",
             "index": 0
           }
@@ -2014,6 +2079,39 @@
         [
           {
             "node": "Parse & Chunk Voiceover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize Chunks": {
+      "main": [
+        [
+          {
+            "node": "Voiceover Chunks Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voiceover Chunks Approval": {
+      "main": [
+        [
+          {
+            "node": "Re-expand Chunk Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Re-expand Chunk Items": {
+      "main": [
+        [
+          {
+            "node": "Split Chunks",
             "type": "main",
             "index": 0
           }
