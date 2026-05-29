@@ -2194,6 +2194,19 @@
       "parameters": {
         "jsCode": "// Get voiceoverText from whichever parse node ran last.\n// On revision path, Parse Revised Script Response has the updated text.\n// On first run, only Parse Script Response ran.\nlet voiceoverText = '';\ntry {\n  const revised = $('Parse Revised Script Response').item.json;\n  if (revised && revised.voiceoverText) voiceoverText = revised.voiceoverText;\n} catch(e) {}\nif (!voiceoverText) {\n  voiceoverText = $('Parse Script Response').item.json.voiceoverText || '';\n}\nconst projectVars = $('Set Project Variables').item.json;\nreturn [{ json: { ...projectVars, voiceoverText } }];\n"
       }
+    },
+    {
+      "id": "write-vo-form-url",
+      "name": "Write Voiceover Form URL",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2880,
+        480
+      ],
+      "parameters": {
+        "command": "={{ 'printf \"Voiceover chunks ready for generation approval.\\n\\nRun this command in Terminal to get your form URL:\\n  bash ~/n8n_projects/get_review_url.sh\\n\\nExecution ID: ' + $execution.id + '\\n\" > /Users/jneal/n8n_projects/SCRIPT_REVIEW_FORM.txt && echo \"Ready: exec ' + $execution.id + '\"' }}"
+      }
     }
   ],
   "connections": {
@@ -2907,7 +2920,7 @@
       "main": [
         [
           {
-            "node": "Voiceover Chunks Approval",
+            "node": "Write Voiceover Form URL",
             "type": "main",
             "index": 0
           }
@@ -3441,6 +3454,17 @@
         [
           {
             "node": "Enhance Script \u2014 TTS Formatting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Voiceover Form URL": {
+      "main": [
+        [
+          {
+            "node": "Voiceover Chunks Approval",
             "type": "main",
             "index": 0
           }
